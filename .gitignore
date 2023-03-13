@@ -6,3 +6,10 @@ __pycache__
 *.egg-info
 *.gz
 *.csv
+*.log
+nohup.out
+*.hdf5
+*.png
+*.pdf
+*.key
+*.afdesign

@@ -72,6 +72,9 @@ Updating download on 12/27/2022
 ### 3IZO
 3IZO it seems that the map in the emdb has been removed. manually remove entry from the pdb id list
 
+### 7OJF
+7OJF seems to be missing a map 
+
 ### Complex size
 NOTE ONLY USE FW. It's based off the deposited sequence and number of copies in the structure.
 I've killed MW in common figures.

@@ -68,6 +68,7 @@ def progress_check(fdir,odir,cutoff):
 	total = len(pdbids)
 	for i in range(total):
 		pdbid = pdbids[i]
+		
 		local_cif = harp.io.rcsb.path_cif_local(pdbid,fdir)
 		tcif = os.path.exists(local_cif)
 		if not tcif:
@@ -76,6 +77,7 @@ def progress_check(fdir,odir,cutoff):
 			if tcif:
 				os.system('mv %s %s'%(local_cif2,local_cif))
 		tcif = touch(local_cif)
+		
 		tden = False
 		try:
 			emdbid = harp.io.mmcif.find_emdb(local_cif)
@@ -86,16 +88,20 @@ def progress_check(fdir,odir,cutoff):
 			tden = touch(local_density)
 			if not tden:
 				maps.append(emdbid)
+				mapsize = 0.
+			else:
+				mapsize = os.path.getsize(local_density)/1000000.
 		except:
 			pass
 
-		if not tcif: cifs.append(pdbid)
+		if not tcif:
+			cifs.append(pdbid)
 
 		check = check_results(os.path.join(odir,'result_%s.csv'%(pdbid)))
 		pcheck = os.path.exists(os.path.join(odir,'dict_%s.pickle'%(pdbid)))
 
 		if not (tcif and tden and check and pcheck):
-			log('%s: %s %s %s %s ----- %d/%d'%(pdbid,str(tcif),str(tden),str(check),str(pcheck),i+1,total))
+			log('%s: %s %s %s %s ----- %d/%d - %.1f Mb'%(pdbid,str(tcif),str(tden),str(check),str(pcheck),i+1,total,mapsize))
 
 	# with open('wget_cifs.sh','w') as f:
 	# 	for pdbid in cifs:

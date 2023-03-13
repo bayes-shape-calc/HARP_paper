@@ -6,10 +6,36 @@ import numpy as np
 import multiprocessing
 import harp
 from .common_paper import open_list,logger,clean_files,write_csv_results,check_results,touch
+import numba as nb
+
+@nb.njit
+def hist_distances_closest(locs,low,high,n):
+	counts = np.zeros(n)
+	delta = (high-low)
+	dc = delta/float(n)
+	xleft = low+np.arange(n)*dc#+dc*.5
+	dist = 0.0
+	l1 = np.zeros(3)
+	l2 = np.zeros(3)
+
+	nmol,nd = locs.shape
+	closest = np.zeros(nmol)+np.inf
+	for i in range(nmol):
+		for k in range(3):
+			l1[k] = locs[i,k]
+		for j in range(nmol):
+			for k in range(3):
+				l2[k] = locs[j,k] - l1[k]
+			dist = np.sqrt(l2[0]*l2[0]+l2[1]*l2[1]+l2[2]*l2[2])
+			if dist < closest[i] and i!=j:
+				closest[i] = dist
+		if closest[i] >= low and closest[i] < high:
+			counts[int((closest[i]-low)//dc)] += 1.0
+	return xleft,counts
 
 
 ## calculate distance of each residue from the COM of the entire molecule
-def run_radial_pdbid(pdbid,fdir,job_i,total,out_dir):
+def run_disthist_pdbid(pdbid,fdir,job_i,total,out_dir):
 	t0 = time.time()
 
 	## Load data into memory
@@ -26,39 +52,33 @@ def run_radial_pdbid(pdbid,fdir,job_i,total,out_dir):
 
 	## Perform calculation
 	try:
-		# keep = np.bitwise_or(mol.atomname=='\"C4\'\"',mol.atomname=='CA')
-		# last_resid = -1
-		# last_chain = ''
-		# for i in range(keep.size):
-		# 	if keep[i]:
-		# 		if last_resid == mol.resid[i] and last_chain == mol.chain[i]:
-		# 			keep[i] = False
-		# 		else:
-		# 			last_resid = mol.resid[i]
-		# 			last_chain = mol.chain[i]
-		# kept = mol.get_set(keep)
-		# mag_r = np.linalg.norm(kept.xyz-mol.com()[None,:],axis=1)
-		coms = [mol.com()]
+		coms = []
 		for chain in mol.unique_chains:
 			subchain = mol.get_chain(chain)
 			for residue in subchain.unique_residues:
 				subresidue = subchain.get_residue(residue)
 				coms.append(subresidue.com())
 		coms = np.array(coms)
+				
+		xleft,hist = hist_distances_closest(coms,0.,20.,2000)
+		out = np.array((xleft,hist))
+		# dx = xleft[1]-xleft[0]
+		# xmid = xleft + .5*dx
+		# print(np.sum(xmid*hist)/np.sum(hist))
 
-		## Write info to a CSV file
-		path_out = os.path.join(out_dir,'radial_%s.npy'%(pdbid))
-		np.save(path_out,coms)
+		## Write info to a binary file
+		path_out = os.path.join(out_dir,'disthist_%s.npy'%(pdbid))
+		np.save(path_out,out)
 
-		## Write log information to file
 		t1 = time.time()
+		
 	except Exception as e:
 		print(str(e))
 	return
 
-def calc_radial(fdir,out_dir,cutoff,num_workers):
+def calc_disthist(fdir,out_dir,cutoff,num_workers):
 	t0 = time.time()
-	log = logger('log_2B_radial.log')
+	log = logger('log_2c_disthist.log')
 
 	num_workers = np.min((num_workers,multiprocessing.cpu_count()))
 	report_delay = 10.0 ## sec
@@ -87,10 +107,10 @@ def calc_radial(fdir,out_dir,cutoff,num_workers):
 		while len(jobs) < num_workers:
 			if len(pdbids) > 0:
 				pdbid = pdbids.pop()
-				if not touch(os.path.join(out_dir,'radial_%s.npy'%(pdbid))):
+				if not touch(os.path.join(out_dir,'disthist_%s.npy'%(pdbid))):
 					job_i += 1
 					log("Starting %s at %s - %d/%d"%(pdbid,str(time.ctime()),job_i,job_total))
-					p = multiprocessing.Process(target=run_radial_pdbid, args=(pdbid,fdir,job_i,job_total,out_dir))
+					p = multiprocessing.Process(target=run_disthist_pdbid, args=(pdbid,fdir,job_i,job_total,out_dir))
 					jobs.append([p,pdbid,time.time()])
 					p.start()
 				else:
@@ -105,22 +125,24 @@ def calc_radial(fdir,out_dir,cutoff,num_workers):
 		jobs = [job for job in jobs if job[0].is_alive()]
 		time.sleep(loop_delay)
 
-
 	import h5py
-	print('Collecting all files into all_radial.hdf5')
+	print('Collecting all files into all_disthist.npy')
 	pdbids = open_list(fname)
 	pdbids = pdbids[::-1]
-	with h5py.File(os.path.join(out_dir,'all_radial.hdf5'),'w') as f:
-		for pdbid in pdbids:
-			fpath = os.path.join(out_dir,'radial_%s.npy'%(pdbid))
-			if touch(fpath):
-				g = f.create_group(pdbid)
-				radial = np.load(fpath)
-				dset = g.create_dataset("radial",radial.shape,dtype=radial.dtype,data=radial,compression='gzip',compression_opts=9)
-			else:
-				print('fail',pdbid)
+
+	out = []
+	for pdbid in pdbids:
+		fpath = os.path.join(out_dir,'disthist_%s.npy'%(pdbid))
+		if touch(fpath):
+			dh = np.load(fpath)
+			out.append(dh[1])
+		else:
+			print('fail',pdbid)
+	out = [dh[0],]+out
+	out = np.array(out)
+	np.save(os.path.join(out_dir,'all_disthist.npy'),out)
 	import shutil
-	shutil.copy(os.path.join(out_dir,'all_radial.hdf5'),'./all_radial.hdf5')
+	shutil.copy(os.path.join(out_dir,'all_disthist.npy'),'./all_disthist.npy')
 	print('done')
 	t3 = time.time()
 	log(str(time.ctime()))
