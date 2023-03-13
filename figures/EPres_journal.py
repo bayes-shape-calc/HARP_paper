@@ -13,7 +13,7 @@ print('loaded')
 
 
 ### apply year cutoff
-ycut = 2018
+ycut = 2014
 rescut = 8.0
 keep =[False for _ in range(len(deposit_date))]
 for i in range(len(deposit_date)):
@@ -64,9 +64,9 @@ print('sorted')
 
 x = np.arange(len(journal_types))
 # # ps,fig,ax = cf.process_sets_indiv(x,P_res_months)
-ps,mu_as,mu_bs,tau_as,tau_bs,covs = cf.process_sets_hierarchical(P_res_journal,nres=5)
+ps,mu_as,mu_bs,tau_as,tau_bs,covs = cf.process_sets_hierarchical(P_res_journal,'figures/models/hmodel_journal.hdf5',nres=5)
 
-fig,ax = cf.make_fig_set_ab(x,mu_as,mu_bs,tau_as,tau_bs,covs)
+fig,ax = cf.make_fig_set_abtautoo(x,mu_as,mu_bs,tau_as,tau_bs,covs)
 
 for aa in fig.axes:
 	aa.set_xlim(x.min()-.1,x.max()+.1)
@@ -74,8 +74,9 @@ for aa in fig.axes:
 	aa.set_xticklabels(journal_types,rotation=45,ha='right')
 # ax['P'].set_xlabel('Month')
 # ax['B'].set_xlabel('Month')
-ax['P'].set_ylim(.1,.3)
-ax['P'].set_yticks([.1,.15,.2,.25,.3])
+
+# ax['P'].set_ylim(.1,.3)
+# ax['P'].set_yticks([.1,.15,.2,.25,.3])
 #
 ax['A'].yaxis.set_major_formatter(plt.ScalarFormatter())
 ax['B'].yaxis.set_major_formatter(plt.ScalarFormatter())
@@ -84,6 +85,6 @@ ax['B'].yaxis.set_minor_formatter(plt.ScalarFormatter())
 #
 fig.subplots_adjust(bottom=.22)
 #
-fig.savefig('figures/rendered/EPres_journal_2018.pdf')
-fig.savefig('figures/rendered/EPres_journal_2018.png',dpi=300)
+fig.savefig('figures/rendered/EPres_journal_2014.pdf')
+fig.savefig('figures/rendered/EPres_journal_2014.png',dpi=300)
 plt.show()

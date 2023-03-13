@@ -43,16 +43,16 @@ x = np.arange(fws.size-1)
 x = x[keep]
 
 # mps,fig = cf.process_sets_indiv(resk,P_res_resk,width=.07,alpha0=1.,beta0=1.)
-ps,mu_as,mu_bs,tau_as,tau_bs,covs = cf.process_sets_hierarchical(P_res_fwk,nres=5)
-fig,ax = cf.make_fig_set_ab(fwsk,mu_as,mu_bs,tau_as,tau_bs,covs)
+ps,mu_as,mu_bs,tau_as,tau_bs,covs = cf.process_sets_hierarchical(P_res_fwk,'figures/models/hmodel_fw.hdf5',nres=5)
+fig,ax = cf.make_fig_set_abtautoo(fwsk,mu_as,mu_bs,tau_as,tau_bs,covs)
 
 for aa in fig.axes:
 	aa.set_xscale('log')
-	aa.set_xlim(fwsk.min()*.9,fwsk.max()*1.1)
-	# aa.set_xticks(fws)
-	# aa.set_xticklabels(fws)
+# 	aa.set_xlim(fwsk.min()*.9,fwsk.max()*1.1)
+# 	# aa.set_xticks(fws)
+# 	# aa.set_xticklabels(fws)
 
-ax['A'].set_ylim(.09,.1125)
+# ax['A'].set_ylim(.09,.1125)
 ax['A'].yaxis.set_major_formatter(plt.ScalarFormatter())
 # ax['B'].yaxis.set_major_formatter(plt.ScalarFormatter())
 ax['A'].yaxis.set_minor_formatter(plt.ScalarFormatter())

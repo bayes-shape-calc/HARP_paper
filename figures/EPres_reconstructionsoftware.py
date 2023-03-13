@@ -59,9 +59,9 @@ print('sorted')
 
 x = np.arange(len(software_types))
 # # ps,fig,ax = cf.process_sets_indiv(x,P_res_months)
-ps,mu_as,mu_bs,tau_as,tau_bs,covs = cf.process_sets_hierarchical(P_res_software,nres=20)
+ps,mu_as,mu_bs,tau_as,tau_bs,covs = cf.process_sets_hierarchical(P_res_software,'figures/models/hmodel_software.hdf5',nres=20)
 
-fig,ax = cf.make_fig_set_ab(x,mu_as,mu_bs,tau_as,tau_bs,covs)
+fig,ax = cf.make_fig_set_abtautoo(x,mu_as,mu_bs,tau_as,tau_bs,covs)
 
 for aa in fig.axes:
 	aa.set_xlim(x.min()-.1,x.max()+.1)

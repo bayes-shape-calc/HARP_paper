@@ -247,9 +247,9 @@ def lnJ(theta,M,Nm,lnpm,lnqm):
 		out += -np.log(a) -.5*tau_a*(np.log(a))**2. + tau_a*mu_a*np.log(a) - np.log(b) -.5*tau_b*(np.log(b))**2. + tau_b*mu_b*np.log(b)
 
 		if np.isnan(out):
-			# print(mu_a,mu_b,tau_a,tau_b,i,Ni,a,b,lnp,lnq)
-			# print(alphas)
-			# print(betas)
+			print(mu_a,mu_b,tau_a,tau_b,i,Ni,a,b,lnp,lnq)
+			print(alphas)
+			print(betas)
 			raise Exception('Nan in lnJ loop')
 	return out
 
@@ -312,7 +312,7 @@ def initialize(M,Nm,lnpm,lnqm):
 	return alphas,betas
 
 @nb.njit
-def outerloop(theta,M,Nm,lnpm,lnqm,maxiter):
+def outerloop(theta,M,Nm,lnpm,lnqm,maxiter,stoptoobig):
 	l0 = lnJ(theta,M,Nm,lnpm,lnqm)
 	max_theta = np.copy(theta)
 	max_lJ = -np.inf#l0
@@ -333,7 +333,7 @@ def outerloop(theta,M,Nm,lnpm,lnqm,maxiter):
 		f0 = .5*np.sum(F0**2.)
 		lam = 1.
 
-		for _ in range(2):
+		for _ in range(2): ## limits the size of the jump. only needs two passes 
 			theta_new = theta - lam*jump
 
 			## Hard limits from priors -- outside=randomize. technically not true for alphas and betas
@@ -379,11 +379,16 @@ def outerloop(theta,M,Nm,lnpm,lnqm,maxiter):
 		if iteration > 2:
 			if np.abs(l1-l0)/np.abs(l0) < 1e-10:
 				break
+			if stoptoobig: ## if things start going very badly
+				if np.any(theta[-2:] > 500):
+					break
+				
 		theta = np.copy(theta_new)
 		l0 = l1
+		
 	return iteration,max_lJ,max_theta
 
-def full_infer(p_ress,maxiter=1000):
+def full_infer(p_ress,maxiter=1000,initiate=None,stoptoobig=False):
 	#### Infer hierarchical model of several beta distributions with different a,b sets
 	#### infer alphas,betas, <ln alpha>, precision(ln alpha), <ln beta>, precision(ln beta)
 	## P_ress = {P_res_m}
@@ -406,14 +411,34 @@ def full_infer(p_ress,maxiter=1000):
 
 	alphas,betas = initialize(M,Nm,lnpm,lnqm)
 
-	mu_a = np.mean(np.log(alphas))
-	mu_b = np.mean(np.log(betas))
-	tau_a = 1./(np.mean(np.log(alphas)**2.) - mu_a**2.)
-	tau_b = 1./(np.mean(np.log(betas)**2.) - mu_b**2.)
+	if initiate is None:
+		mu_a = np.mean(np.log(alphas))
+		mu_b = np.mean(np.log(betas))
+		mu_a2 = np.mean(np.log(alphas)**2.)
+		mu_b2 = np.mean(np.log(betas)**2.)
+		tau_a = 1./(mu_a2 - mu_a**2.)
+		tau_b = 1./(mu_b2 - mu_b**2.)
+	
+		if tau_a <= 1e-8:
+			tau_a = 1e-8
+		elif tau_a >= 1e4:
+			tau_a = 1e4
+		if tau_b <= 1e-8:
+			tau_b = 1e-8
+		elif tau_b >= 1e4:
+			tau_b = 1e4
+	else:
+		mu_a,mu_b,tau_a,tau_b = initiate
+		
+	# mu_a = np.random.uniform(low=-1,high=1)
+	# mu_b = np.random.uniform(low=-1,high=1)
+	# tau_a = 10.**np.random.uniform(low=-1,high=1)
+	# tau_b = 10.**np.random.uniform(low=-1,high=1)
+
 
 	theta = np.concatenate([alphas,betas,[mu_a,mu_b,tau_a,tau_b]])
 
-	iteration, max_lJ, max_theta = outerloop(theta,M,Nm,lnpm,lnqm,maxiter)
+	iteration, max_lJ, max_theta = outerloop(theta,M,Nm,lnpm,lnqm,maxiter,stoptoobig=stoptoobig)
 
 	# if iteration >= 999:
 	# 	print(iteration,999)
@@ -429,21 +454,21 @@ def full_infer(p_ress,maxiter=1000):
 	return iteration, max_lJ, max_theta, cov
 
 
-def run_infer_restarts(p_ress,maxiter=1000,nres=10):
+def run_infer_restarts(p_ress,maxiter=1000,nres=10,initiate=None,stoptoobig=False):
 	M = float(len(p_ress))
-	iteration, lJ, theta0, cov = full_infer(p_ress,maxiter=maxiter)
+	iteration, lJ, theta0, cov = full_infer(p_ress,maxiter=maxiter,initiate=initiate,stoptoobig=stoptoobig)
 	max_theta = theta0.copy()
 	max_lJ = lJ
 	max_cov = cov.copy()
 	print("% 18.10f [% 10.5f % 10.5f % 10.5f % 10.5f] %d"%(lJ/M,theta0[-4],theta0[-3],theta0[-2],theta0[-1],iteration))
 	for _ in range(nres-1):
-		iteration,lJ, theta, cov = full_infer(p_ress,maxiter=maxiter)
+		iteration,lJ, theta, cov = full_infer(p_ress,maxiter=maxiter,initiate=initiate,stoptoobig=stoptoobig)
 		print("% 18.10f [% 10.5f % 10.5f % 10.5f % 10.5f] %d"%(lJ/M,theta[-4],theta[-3],theta[-2],theta[-1],iteration))
 		if lJ > max_lJ:
 			max_lJ = lJ
 			max_theta = theta.copy()
 			max_cov = cov.copy()
-	return max_theta, max_cov
+	return max_theta, max_cov, max_lJ/M
 
 ################################################################################
 ################################################################################
@@ -518,8 +543,8 @@ def M2(pmr,alpha0=1.,beta0=1.):
 	return m2_thetas,m2_cis
 
 #### M4
-def M4(pmr,maxiter=1000,nres=5):
-	theta,cov = run_infer_restarts(pmr,maxiter=maxiter,nres=nres)
+def M4(pmr,maxiter=1000,nres=5,initiate=None,stoptoobig=False):
+	theta,cov,lnj = run_infer_restarts(pmr,maxiter=maxiter,nres=nres,initiate=initiate,stoptoobig=stoptoobig)
 	M = (theta.size-4)//2
 	alphas = theta[:M]
 	betas = theta[M:2*M]
@@ -530,39 +555,72 @@ def M4(pmr,maxiter=1000,nres=5):
 		m4_cis[i] = beta_stats(alphas[i],betas[i])
 
 	marginal_cov = cov[-4:,-4:] ## marginal cf bishop 2.98 ie regardless of alphas, betas...
-	return alphas,betas,mu_a,mu_b,tau_a,tau_b,m4_cis,marginal_cov
+	return alphas,betas,mu_a,mu_b,tau_a,tau_b,m4_cis,marginal_cov,lnj
 
-def process_sets_hierarchical(p_ress,maxiter=1000,nres=5):
-	alphass = []
-	betass = []
-	mu_as = []
-	mu_bs = []
-	tau_as = []
-	tau_bs = []
-	ps = []
-	covs = []
-	import time
-	for i in range(len(p_ress)):
-		pmr = p_ress[i]
-		print('Running',i,"(n=%d)"%(len(pmr)))
-		t0 = time.time()
-		alphas,betas,mu_a,mu_b,tau_a,tau_b,m4_cis,cov = M4(pmr,maxiter=maxiter,nres=nres)
-		t1 = time.time()
-		print('Time:',t1-t0)
-		p = alphas/(alphas+betas)
-		alphass.append(alphas)
-		betass.append(betas)
-		mu_as.append(mu_a)
-		mu_bs.append(mu_b)
-		tau_as.append(tau_a)
-		tau_bs.append(tau_b)
-		ps.append(m4_cis[:,1])
-		covs.append(cov)
-	mu_as = np.array(mu_as)
-	mu_bs = np.array(mu_bs)
-	tau_as = np.array(tau_as)
-	tau_bs = np.array(tau_bs)
-	covs = np.array(covs)
+def process_sets_hierarchical(p_ress,unique_name='',initiates=None,maxiter=1000,nres=5,overwrite=False,stoptoobig=False):
+	import os
+	import h5py
+
+	if os.path.exists(unique_name) and not overwrite:
+		ps = []
+		with h5py.File(unique_name,'r') as f:
+			for i in range(len(p_ress)):
+				ps.append(f['ps/%d'%(i)][:])
+			mu_as = f['mu_as'][:]
+			mu_bs = f['mu_bs'][:]
+			tau_as = f['tau_as'][:]
+			tau_bs = f['tau_bs'][:]
+			covs = f['covs'][:]
+		print('LOADED',unique_name)
+	else:
+		if overwrite:
+			print('OVERWRITING',unique_name)
+		alphass = []
+		betass = []
+		mu_as = []
+		mu_bs = []
+		tau_as = []
+		tau_bs = []
+		ps = []
+		covs = []
+		import time
+		for i in range(len(p_ress)):
+			pmr = p_ress[i]
+			print('Running',i,"(n=%d)"%(len(pmr)))
+			t0 = time.time()
+			if not initiates is None:
+				initiate = initiates[i]
+			else:
+				initiate = None
+			alphas,betas,mu_a,mu_b,tau_a,tau_b,m4_cis,cov,lnj = M4(pmr,maxiter=maxiter,nres=nres,initiate=initiate,stoptoobig=stoptoobig)
+			t1 = time.time()
+			print('[%.6f, %.6f, %.6f, %.6f], ### %.3f '%(mu_a,mu_b,tau_a,tau_b,lnj))
+			print('Time:',t1-t0)
+			p = alphas/(alphas+betas)
+			alphass.append(alphas)
+			betass.append(betas)
+			mu_as.append(mu_a)
+			mu_bs.append(mu_b)
+			tau_as.append(tau_a)
+			tau_bs.append(tau_b)
+			ps.append(m4_cis[:,1])
+			covs.append(cov)
+		mu_as = np.array(mu_as)
+		mu_bs = np.array(mu_bs)
+		tau_as = np.array(tau_as)
+		tau_bs = np.array(tau_bs)
+		covs = np.array(covs)
+		
+		if not unique_name == '':
+			with h5py.File(unique_name,'w') as f:
+				for i in range(len(p_ress)):
+					f.create_dataset('ps/%d'%(i),data=ps[i])
+				f.create_dataset('mu_as',data=mu_as)
+				f.create_dataset('mu_bs',data=mu_bs)
+				f.create_dataset('tau_as',data=tau_as)
+				f.create_dataset('tau_bs',data=tau_bs)
+				f.create_dataset('covs',data=covs)
+			print('SAVED',unique_name)
 
 	return ps,mu_as,mu_bs,tau_as,tau_bs,covs
 

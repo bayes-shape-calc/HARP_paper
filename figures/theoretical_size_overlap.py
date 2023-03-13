@@ -65,24 +65,24 @@ def render_theory(theta,r,atom_a,atom_b):
 
 ## from Tilton, Dewan, Petsko Biochemistry 1992, 31, 2469. See fig. 7 T = 0,100.
 ## Also, Carugo amino acids 2018 "atomic displacement parameteres in structural biology" says 6.1 A2, or 5A2 at low temp for trypsinogen and met-myoglobin. see Singh 1980, Hartmann 1982. Hartmann is a Fraunfelder paper -- very good! says it's 5 at cryo temp so use that.
-for approx_B in [37.55,5.,0.]:
+for cutoff,approx_B in zip([.95,.5],[37,143.8]):#,5.,0.]:
 	dw_a = np.sqrt(approx_B/2.)/(2.*np.pi)
 	print(approx_B,dw_a)
 
 
-	def fxn(theta,x):
+	def fxn1(theta,x):
 		a,b = theta
 		return a*np.exp(-.5*x**2./(b**2.))
-	def minfxn(theta,x,y):
+	def minfxn1(theta,x,y):
 		a,b = theta
 		if a<0 or b < 0:
 			return np.inf
-		yy = fxn(theta,x)
+		yy = fxn1(theta,x)
 		out = np.sqrt(np.sum(np.square(yy-y)))
 		return out
 	from scipy.optimize import minimize
 
-	fig,ax =plt.subplots(2,1,sharex=True,gridspec_kw=dict(height_ratios=[5,1],width_ratios=[1,]))
+	fig,ax =plt.subplots(1)
 
 	ymax = 0
 	for atom,atom_a,atom_b in params:
@@ -91,52 +91,56 @@ for approx_B in [37.55,5.,0.]:
 
 	ss = []
 	ws = []
-	for atom,atom_a,atom_b in params:
+	for atom,atom_a,atom_b in [params[1],]:
 		y = render_theory([1./ymax,0.,.3,approx_B],r,atom_a,atom_b)
 		guess = np.array((1.,.2))
-		out = minimize(minfxn,guess,args=(r,y),method='Nelder-Mead')
+		out = minimize(minfxn1,guess,args=(r,y),method='Nelder-Mead')
 		ws.append(out.x[0])
 		ss.append(out.x[1])
-		yy = fxn(out.x,r)
-		ax[0].plot(r,y,lw=2,label=r'%s: $\sigma =%.3f\AA$'%(atom[0],out.x[1]),alpha=1.,zorder=2)
-		ax[0].plot(r,yy,color='k',lw=.8,alpha=.8,linestyle='--',zorder=3)
-		ax[1].plot(r,yy-y,lw=2,alpha=1.,zorder=2)
 
 	print(ws)
 	print([t[0] for t in params])
 
-	cutoff = 0.95
+	# cutoff = 0.5
 	s = np.mean(ss)
 
 	from scipy.integrate import quad
-	def fxn(r,s):
+	def fxn2(r,s):
 		return 4.*np.pi*(2*np.pi*s*s)**(-1.5)*np.exp(-.5/s/s*r*r) * r*r
-	def minfxn(theta,s,cutoff):
+	def minfxn2(theta,s,cutoff):
 		R = theta[0]
 		if R < 1e-6:
 			return np.inf
-		integral = quad(fxn,0.,R,args=(s,))[0]
+		integral = quad(fxn2,0.,R,args=(s,))[0]
 		return np.abs(cutoff-integral)
 	guess = np.array((.2,))
-	out = minimize(minfxn,guess,args=(s,cutoff),method='Nelder-Mead')
-
+	out = minimize(minfxn2,guess,args=(s,cutoff),method='Nelder-Mead')
 	cc = out.x[0]
+	
 	print(cc)
-	for aa in ax:
-		for xx in [-cc,cc,-s,s]:
-			aa.axvline(x=xx,color='k',lw=.8,linestyle='--')
+	ccbond = 1.54
+	ax.plot(r-ccbond/2.,fxn1([1.,s],r),color='tab:blue')
+	ax.plot(r+ccbond/2.,fxn1([1.,s],r),color='tab:orange')
+	
 
-	ax[0].set_title(r'$\langle\sigma\rangle=%.03f \AA$,  $r_{95\%%}= %.3f \AA$'%(s,cc))
+	for xx in [-cc*3/2.,cc/2.]:
+		ax.axvline(x=xx,color='tab:blue',lw=1.,linestyle='--')
+	for xx in [-cc/2.,cc*3/2.]:
+		ax.axvline(x=xx,color='tab:orange',lw=1.,linestyle='--')
 
-	ax[0].set_xlim(-1.,1)
-	ax[1].set_xlabel('Radius (Angstrom)')
-	ax[0].legend()
-	ax[0].set_ylabel('Relative EM Radial Density')
-	ax[1].set_ylabel('Residual')
-	ax[1].set_ylim(-.02,.02)
+
+
+	ax.set_title(r'B = %.1f $\AA^2$,  $\langle\sigma\rangle=%.02f \AA$,  $r_{%.0f\%%}= %.2f \AA$'%(approx_B,s,100*cutoff,cc))
+
+	ax.set_xlim(-3.,3.)
+	ax.set_xlabel('Distance (Angstrom)')
+	# ax[0].legend()
+	ax.set_ylabel('Relative EM Radial Density')
+	# ax[1].set_ylabel('Residual')
+	# ax[1].set_ylim(-.02,.02)
 	plt.tight_layout()
-
-
-	plt.savefig('figures/rendered/fig_theoretical_profile_B%.0f.pdf'%(approx_B))
-	plt.savefig('figures/rendered/fig_theoretical_profile_B%.0f.png'%(approx_B),dpi=300)
+	#
+	#
+	plt.savefig('figures/rendered/fig_theoretical_overlap_B%.0f.pdf'%(approx_B))
+	plt.savefig('figures/rendered/fig_theoretical_overlap_B%.0f.png'%(approx_B),dpi=300)
 	plt.show()

@@ -1,4 +1,4 @@
-## 233
+## 23
 
 import common_figures as cf
 import numpy as np
@@ -20,12 +20,12 @@ for i in range(len(deposit_date)):
 		P_res_years[year_index].append(pp)
 print('sorted')
 
-
 # ps,fig,ax = cf.process_sets_indiv(years,P_res_years)
-ps,mu_as,mu_bs,tau_as,tau_bs,covs = cf.process_sets_hierarchical(P_res_years,nres=20)
+ps,mu_as,mu_bs,tau_as,tau_bs,covs = cf.process_sets_hierarchical(P_res_years,'figures/models/hmodel_year.hdf5',nres=20)
 
 
-fig,ax = cf.make_fig_set_ab(years,mu_as,mu_bs,tau_as,tau_bs,covs)
+# fig,ax = cf.make_fig_set_ab(years,mu_as,mu_bs,tau_as,tau_bs,covs)
+fig,ax = cf.make_fig_set_abtautoo(years,mu_as,mu_bs,tau_as,tau_bs,covs)
 
 for aa in fig.axes:
 	aa.set_xticks(years[::2])
@@ -33,9 +33,17 @@ for aa in fig.axes:
 	aa.set_xlim(years.min(),years.max())
 ax['P'].set_xlabel('Year')
 ax['B'].set_xlabel('Year')
-ax['P'].set_ylim(-.005,.275)
+ax['P'].set_ylim(-.00,.5)
 
-ax['A'].set_ylim(.095,.145)
+for axl in ['A','B','T','R']:
+	ax[axl].set_yscale('log')
+
+ax['B'].set_ylim(.1,10.)
+ax['R'].set_ylim(1.,40.)
+ax['T'].set_ylim(.025,2.5)
+
+# ax['A'].set_ylim(.095,.145)
+
 aticks = np.array((.1,.11,.12,.13,.14))
 for _ in range(2): ## idk it doesn't always take the first time
 	ax['A'].set_yticks(aticks)

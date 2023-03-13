@@ -8,40 +8,7 @@ from matplotlib.offsetbox import AnchoredOffsetbox, TextArea
 import tqdm
 harp.models.use_c()
 
-@nb.njit
-def hpdi_post(x,p,frac=.95):
-	pp = np.sum(p)
-	imin = 0
-	imax = x.size
-	xmax = imax-imin
-	for i in range(x.size):
-		for j in range(i,x.size):
-			pij = np.sum(p[i:j+1])/pp
-			if pij >= frac:
-				if j-i < xmax:
-					imin = i
-					imax = j
-					xmax = imax-imin
-	return np.array((imin,imax),dtype='int')
-
-@nb.njit
-def hpdi_post_all(x,ps,frac=.95):
-	n = ps.shape[0]
-	xlh = np.zeros((n,2))
-	xmap = np.zeros(n)
-	xmu = np.zeros(n)
-	xstd = np.zeros(n)
-	for i in range(n):
-		q = hpdi_post(x,ps[i],frac)
-		xlh[i,0] = x[q[0]]
-		xlh[i,1] = x[q[1]]
-		xmap[i] = x[np.argmax(ps[i])]
-		xmu[i] = np.sum(x*ps[i])/np.sum(ps[i])
-		xstd[i] = np.sum(x**2.*ps[i])/np.sum(ps[i])
-		xstd[i] -= xmu[i]**2.
-		xstd[i] = np.sqrt(xstd[i])
-	order = np.argsort(xmap)[::-1]
-	return xlh,xmap,xmu,xstd,order
+from .common_figures import hpdi_post,hpdi_post_all
 
 
 #### Preparation

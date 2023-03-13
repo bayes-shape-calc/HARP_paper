@@ -67,9 +67,9 @@ for i in range(len(P_res_camera)):
 
 x = np.arange(len(camera_types))
 # # ps,fig,ax = cf.process_sets_indiv(x,P_res_months)
-ps,mu_as,mu_bs,tau_as,tau_bs,covs = cf.process_sets_hierarchical(P_res_camera,nres=5)
+ps,mu_as,mu_bs,tau_as,tau_bs,covs = cf.process_sets_hierarchical(P_res_camera,'figures/models/hmodel_camera.hdf5',nres=5)
 
-fig,ax = cf.make_fig_set_ab(x,mu_as,mu_bs,tau_as,tau_bs,covs)
+fig,ax = cf.make_fig_set_abtautoo(x,mu_as,mu_bs,tau_as,tau_bs,covs)
 
 for aa in fig.axes:
 	aa.set_xlim(x.min()-.1,x.max()+.1)
@@ -80,6 +80,9 @@ for aa in fig.axes:
 # ax['P'].set_ylim(.1,.3)
 # ax['P'].set_yticks([.1,.15,.2,.25,.3])
 #
+
+
+ax['P'].set_ylim(0.,.55)
 ax['A'].yaxis.set_major_formatter(plt.ScalarFormatter())
 ax['B'].yaxis.set_major_formatter(plt.ScalarFormatter())
 ax['A'].yaxis.set_minor_formatter(plt.ScalarFormatter())

@@ -32,8 +32,8 @@ for ycut in [2000,2014,2018,2019]:
 	P_res_resk = [P_res_res[i] for i in range(len(P_res_res)) if keep[i]]
 
 	# mps,fig = cf.process_sets_indiv(resk,P_res_resk,width=.07,alpha0=1.,beta0=1.)
-	ps,mu_as,mu_bs,tau_as,tau_bs,covs = cf.process_sets_hierarchical(P_res_resk,nres=20)
-	fig,ax = cf.make_fig_set_ab(resk,mu_as,mu_bs,tau_as,tau_bs,covs)
+	ps,mu_as,mu_bs,tau_as,tau_bs,covs = cf.process_sets_hierarchical(P_res_resk,'figures/models/hmodel_resolution_%d.hdf5'%(ycut),nres=20)
+	fig,ax = cf.make_fig_set_abtautoo(resk,mu_as,mu_bs,tau_as,tau_bs,covs)
 
 	for aa in fig.axes:
 		aa.set_xticks(np.arange(8+1))

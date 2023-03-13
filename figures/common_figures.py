@@ -2,6 +2,7 @@
 
 import h5py as h
 import numpy as np
+import numba as nb
 from scipy.special import betaincinv
 import matplotlib.pyplot as plt
 # import plotstyle
@@ -111,7 +112,7 @@ def load_alignment(fname):
 	return align
 def load_depositdate(fname):
 	## - delimited strings
-	return _load_string('deposit date','./all_results.hdf5')
+	return _load_string('deposit date',fname)
 
 def load_year(fname):
 	year = _load_int('deposit year',fname)
@@ -236,16 +237,16 @@ def sine_swarm(d,period=100.,width=.45):
 
 
 def swarmbox(d,ind,ax,color=plt.cm.tab20b(0),wrap=40,width=.8):
-	swarm = diag_swarm(d,wrap=wrap,width=width*.75)
-	# swarm = zigzag_swarm(d,wrap=wrap,width=width*.75)
-	# swarm = sine_swarm(d,period=wrap,width=width-.2)
-
+	dd = np.concatenate(d)
+	# swarm = diag_swarm(dd,wrap=wrap,width=width*.75)
+	# swarm = zigzag_swarm(dd,wrap=wrap,width=width*.75)
+	swarm = sine_swarm(dd,period=wrap,width=width-.2)
 	ax.plot(swarm[0]+ind,swarm[1],'.',color='k',alpha=.8,ms=1.)
 
-	if d.size>3:
-		bp = ax.boxplot(d,positions=[ind],zorder=2,showfliers=False,widths=[width],notch=False,patch_artist=True,medianprops={'color':'k','linewidth':1.5,'alpha':1.},whiskerprops={'color':'k','linewidth':1.},whis=0,capprops={'color':'k','linewidth':1})
-		bp['boxes'][0].set_facecolor([color[0],color[1],color[2],0.6])
-		bp['boxes'][0].set_edgecolor('k')
+	# if dd.size>3:
+		# bp = ax.boxplot(d,positions=[ind],zorder=2,showfliers=False,widths=[width],notch=False,patch_artist=True,medianprops={'color':'k','linewidth':1.5,'alpha':1.},whiskerprops={'color':'k','linewidth':1.},whis=0,capprops={'color':'k','linewidth':1})
+		# bp['boxes'][0].set_facecolor([color[0],color[1],color[2],0.6])
+		# bp['boxes'][0].set_edgecolor('k')
 
 
 def make_fig_set_p(xs,ps,yscale='logit',width=.7):
@@ -294,6 +295,40 @@ def hpdi(samples,frac=.95):
 			imax -= 1
 	return np.array((x[imin],x[imax]))
 
+@nb.njit
+def hpdi_post(x,p,frac=.95):
+	pp = np.sum(p)
+	imin = 0
+	imax = x.size
+	xmax = imax-imin
+	for i in range(x.size):
+		for j in range(i,x.size):
+			pij = np.sum(p[i:j+1])/pp
+			if pij >= frac:
+				if j-i < xmax:
+					imin = i
+					imax = j
+					xmax = imax-imin
+	return np.array((imin,imax),dtype='int')
+
+@nb.njit
+def hpdi_post_all(x,ps,frac=.95):
+	n = ps.shape[0]
+	xlh = np.zeros((n,2))
+	xmap = np.zeros(n)
+	xmu = np.zeros(n)
+	xstd = np.zeros(n)
+	for i in range(n):
+		q = hpdi_post(x,ps[i],frac)
+		xlh[i,0] = x[q[0]]
+		xlh[i,1] = x[q[1]]
+		xmap[i] = x[np.argmax(ps[i])]
+		xmu[i] = np.sum(x*ps[i])/np.sum(ps[i])
+		xstd[i] = np.sum(x**2.*ps[i])/np.sum(ps[i])
+		xstd[i] -= xmu[i]**2.
+		xstd[i] = np.sqrt(xstd[i])
+	order = np.argsort(xmap)[::-1]
+	return xlh,xmap,xmu,xstd,order
 
 def make_fig_set_ab(xs,mu_as,mu_bs,tau_as,tau_bs,covs):
 	fig2 = plt.figure(constrained_layout=True,figsize=(8,3.5))
@@ -348,6 +383,89 @@ def make_fig_set_ab(xs,mu_as,mu_bs,tau_as,tau_bs,covs):
 	fig2.subplots_adjust(left=.08,right=.99,top=.98,bottom=.15,wspace=.21,hspace=.05)
 
 	return fig2,ax2
+
+
+
+
+def make_fig_set_abtautoo(xs,mu_as,mu_bs,tau_as,tau_bs,covs):
+	fig2 = plt.figure(constrained_layout=True,figsize=(12,3.5))
+	ax2 = fig2.subplot_mosaic("PAR\nPBT",sharex=True)
+
+	nsamples=1000
+	rvs = np.zeros((xs.size,nsamples,4))+np.nan
+	for i in range(xs.size):
+		if not np.any(np.isnan(covs[i])):
+			rvs[i] = np.random.multivariate_normal(np.array((mu_as[i],mu_bs[i],tau_as[i],tau_bs[i])),covs[i],size=nsamples)
+	qa = np.exp(rvs[:,:,0])
+	qb = np.exp(rvs[:,:,1])
+	qp = qa/(qa+qb)
+	alphas = np.exp(mu_as)
+	betas = np.exp(mu_bs)
+	ps = alphas/(alphas+betas)
+
+	yerr = np.zeros((2,xs.size))
+	for i in range(xs.size):
+		yerr[:,i] = hpdi(qp[i],.95)
+	# ax2['P'].errorbar(xs,ps,yerr=yerr,marker='o',color='k')
+	ax2['P'].plot(xs,ps,marker='.',color='black',lw=.75,markersize=5)
+	ax2['P'].fill_between(xs,yerr[0],yerr[1],color='black',alpha=.2,zorder=2,edgecolor='black')
+	ax2['P'].set_ylim(-.02,1.02)
+
+	yerr = np.zeros((2,xs.size))
+	for i in range(xs.size):
+		yerr[:,i] = hpdi(qa[i],.95)
+	# ax2['A'].errorbar(xs,alphas,yerr=yerr,marker='o',color='b',label=r'$\langle\alpha\rangle$')
+	ax2['A'].fill_between(xs,yerr[0],yerr[1],color='b',alpha=.2,zorder=2,edgecolor='darkblue')
+	ax2['A'].plot(xs,alphas,marker='.',color='b',label=r'$\langle\alpha\rangle$',lw=.75,markersize=5)
+	
+	
+	yerr = np.zeros((2,xs.size))
+	for i in range(xs.size):
+		yerr[:,i] = hpdi(qb[i],.95)
+	# ax2['B'].errorbar(xs,betas,yerr=yerr,marker='s',color='r',label=r'$\langle\beta\rangle$')
+	ax2['B'].fill_between(xs,yerr[0],yerr[1],color='r',alpha=.2,zorder=2,edgecolor='darkred')
+	ax2['B'].plot(xs,betas,marker='.',color='r',label=r'$\langle\beta\rangle$',lw=.75,markersize=5)
+	
+	
+	yerr = np.zeros((2,xs.size))
+	for i in range(xs.size):
+		yerr[:,i] = hpdi(rvs[:,:,2][i],.95)
+	# ax2['R'].errorbar(xs,betas,yerr=yerr,marker='s',color='r',label=r'$\langle\beta\rangle$')
+	ax2['R'].fill_between(xs,yerr[0],yerr[1],color='b',alpha=.2,zorder=2,edgecolor='darkblue')
+	ax2['R'].plot(xs,tau_as,marker='.',color='b',label=r'$\tau_\alpha$',lw=.75,markersize=5)
+	
+	yerr = np.zeros((2,xs.size))
+	for i in range(xs.size):
+		yerr[:,i] = hpdi(rvs[:,:,3][i],.95)
+	# ax2['T'].errorbar(xs,betas,yerr=yerr,marker='s',color='r',label=r'$\langle\beta\rangle$')
+	ax2['T'].fill_between(xs,yerr[0],yerr[1],color='r',alpha=.2,zorder=2,edgecolor='darkred')
+	ax2['T'].plot(xs,tau_bs,marker='.',color='r',label=r'$\tau_\beta$',lw=.75,markersize=5)
+	
+	
+
+	ax2['B'].set_yscale('log')
+	ax2['A'].set_yscale('log')
+	ax2['B'].set_ylabel(r'$\langle\beta\rangle$')
+	ax2['A'].set_ylabel(r'$\langle\alpha\rangle$')
+	
+	ax2['R'].set_yscale('log')
+	ax2['T'].set_yscale('log')
+	ax2['R'].set_ylabel(r'$\tau_\alpha$')
+	ax2['T'].set_ylabel(r'$\tau_\beta$')
+	
+	# ax2[1].legend()#loc=1)
+	#
+	# ax2[2].errorbar(xs,np.exp(1./np.sqrt(tau_bs)),yerr=qsb.std(1),marker='s',color='r',label=r'$Std(\beta)$')
+	# ax2[2].errorbar(xs,np.exp(np.sqrt(1./tau_as)),yerr=qsa.std(1),marker='o',color='b',label=r'$Std(\alpha)$')
+	# ax2[2].set_yscale('log')
+	# ax2[2].legend()#loc=4)
+	ax2['P'].set_ylabel(r'$\langle\langle P_{res} \rangle\rangle$')
+
+	ax2['A'].set_xticklabels(())
+	fig2.subplots_adjust(left=.08,right=.99,top=.98,bottom=.15,wspace=.21,hspace=.05)
+
+	return fig2,ax2
+
 
 process_sets_hierarchical = infer_full_2_lognormal.process_sets_hierarchical
 process_sets_indiv = infer_full_2_lognormal.process_sets_indiv

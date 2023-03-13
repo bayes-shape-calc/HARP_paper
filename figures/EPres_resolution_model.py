@@ -58,6 +58,7 @@ P_res = cf.load_P_res('./all_results.hdf5')
 print('loaded')
 
 
+# for ycut in [2019,2018,2014,2000]:
 for ycut in [2000,2014,2018,2019]:
 	res = np.arange(0,8.,.1)
 	P_res_res = [[] for _ in range(res.size)]
@@ -79,7 +80,7 @@ for ycut in [2000,2014,2018,2019]:
 	P_res_resk = [P_res_res[i] for i in range(len(P_res_res)) if keep[i]]
 
 	# mps,fig = cf.process_sets_indiv(resk,P_res_resk,width=.07,alpha0=1.,beta0=1.)
-	ps,mu_as,mu_bs,tau_as,tau_bs,covs = cf.process_sets_hierarchical(P_res_resk,nres=20)
+	ps,mu_as,mu_bs,tau_as,tau_bs,covs = cf.process_sets_hierarchical(P_res_resk,'figures/models/hmodel_resolution_%d.hdf5'%(ycut),nres=20)
 
 
 	alphas = np.exp(mu_as)
@@ -105,7 +106,7 @@ for ycut in [2000,2014,2018,2019]:
 
 	###### plotting
 
-	fig,ax = cf.make_fig_set_ab(resk,mu_as,mu_bs,tau_as,tau_bs,covs)
+	fig,ax = cf.make_fig_set_abtautoo(resk,mu_as,mu_bs,tau_as,tau_bs,covs)
 
 	for aa in fig.axes:
 		aa.set_xticks(np.arange(8+1))
@@ -113,7 +114,11 @@ for ycut in [2000,2014,2018,2019]:
 		aa.set_xlim(0.,8.)
 	ax['P'].set_xlabel('Resolution ($\AA$)')
 	ax['B'].set_xlabel('Resolution ($\AA$)')
-	ax['A'].set_ylim(6e-2,2e1)
+	# ax['A'].set_ylim(6e-2,2e1)
+	ax['A'].set_ylim(6e-2,.5e1)
+	ax['B'].set_ylim(.06,6.)
+	
+	
 
 
 	ax['P'].plot(res,ymodel,'tab:blue',alpha=1.,zorder=+3,lw=1.5)
@@ -129,3 +134,6 @@ for ycut in [2000,2014,2018,2019]:
 	fig.savefig('figures/rendered/EPres_resolution_model_%d-2022.png'%(ycut),dpi=300)
 
 	plt.show()
+	
+	
+	# break
