@@ -25,31 +25,39 @@ ps,mu_as,mu_bs,tau_as,tau_bs,covs = cf.process_sets_hierarchical(P_res_years,'fi
 
 
 # fig,ax = cf.make_fig_set_ab(years,mu_as,mu_bs,tau_as,tau_bs,covs)
-fig,ax = cf.make_fig_set_abtautoo(years,mu_as,mu_bs,tau_as,tau_bs,covs)
+fig,ax = cf.make_fig_set_ab(years,mu_as,mu_bs,tau_as,tau_bs,covs)
 
 for aa in fig.axes:
-	aa.set_xticks(years[::2])
-	aa.set_xticklabels(years[::2],rotation=0)
+	aa.set_xticks(years[::2][1:-1])
+	aa.set_xticklabels(years[::2][1:-1],rotation=-30)#,fontsize=8)
 	aa.set_xlim(years.min(),years.max())
 ax['P'].set_xlabel('Year')
 ax['B'].set_xlabel('Year')
+# ax['T'].set_xlabel('Year')
 ax['P'].set_ylim(-.00,.5)
 
-for axl in ['A','B','T','R']:
+# for axl in ['A','B','T','R']:
+for axl in ['A','B']:
 	ax[axl].set_yscale('log')
 
+ax['A'].set_ylim(.1,1.)
 ax['B'].set_ylim(.1,10.)
-ax['R'].set_ylim(1.,40.)
-ax['T'].set_ylim(.025,2.5)
+# ax['R'].set_ylim(1.,40.)
+# ax['T'].set_ylim(.025,5.)
 
-# ax['A'].set_ylim(.095,.145)
+ax['A'].set_ylim(.095,.2)
 
-aticks = np.array((.1,.11,.12,.13,.14))
-for _ in range(2): ## idk it doesn't always take the first time
-	ax['A'].set_yticks(aticks)
-	ax['A'].set_yticklabels(['%.2f'%(t) for t in aticks])
+# aticks = np.array((.1,.11,.12,.13,.14))
+# aticks = np.array((.1,1.))
+# for _ in range(2): ## idk it doesn't always take the first time
+# 	ax['A'].set_yticks(aticks)
+# 	ax['A'].set_yticklabels(['%.2f'%(t) for t in aticks])
+# fig.canvas.draw()
+
+fig.tight_layout()
+fig.subplots_adjust(bottom=.22)
 
 fig.savefig('figures/rendered/EPres_year.pdf')
 fig.savefig('figures/rendered/EPres_year.png',dpi=300)
 
-plt.show()
+plt.close()

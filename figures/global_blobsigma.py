@@ -8,7 +8,8 @@ harp.models.use_c()
 
 
 basedir = '../testdb'
-for pdbid in ['6j6j','6j6k','7a4m','6z6u','8b0x']:
+# for pdbid in ['6j6j','6j6k','7a4m','6z6u','8b0x']:
+for pdbid in ['7a4m']:
 	## Preparation
 	success, path_mol, path_density, flag_density = harp.io.rcsb.get_pdb(pdbid,basedir,False,False,print)
 	mol = harp.molecule.load(path_mol,True)
@@ -37,6 +38,7 @@ for pdbid in ['6j6j','6j6k','7a4m','6z6u','8b0x']:
 
 
 	## compare offset curves
+	# blobs = np.linspace(.7,.8,1001)
 	blobs = np.linspace(.005,.25,40)
 	blobs = np.concatenate((blobs[:-1],np.linspace(blobs.max(),2.5,40)))
 	if not pdbid in ['6z6u','8b0x']: ## takes too long
@@ -45,6 +47,7 @@ for pdbid in ['6j6j','6j6k','7a4m','6z6u','8b0x']:
 		blobs = np.concatenate((blobs[:-1],np.linspace(blobs.max(),40.0,10)))
 	else:
 		blobs = np.concatenate((blobs[:-1],np.linspace(blobs.max(),10.0,5)))
+	
 
 	nsuperatoms = 0
 	for chain in mol.unique_chains:
@@ -82,15 +85,19 @@ for pdbid in ['6j6j','6j6k','7a4m','6z6u','8b0x']:
 	plt.figure()
 	plt.axvline(x=blobs[np.argmax(lnev)],color='k',linestyle='--',lw=.8)
 
+	print(pdbid,blobs[np.argmax(lnev)])
 	plt.ion()
 	# plt.plot(blobs,lnev-lnev.max(),label='Global super-atom')
-	plt.plot(blobs,lnev,label='Global super-atom')
+	plt.plot(blobs,lnev,label=r'Global $M_1$')
 	plt.legend()
 	plt.title('%s'%(pdbid.upper()))
 	plt.xlim(0,blobs.max())
-	plt.xlabel(r'$\sigma_{blob}$')
-	plt.ylabel('ln(shape evidence)')
+	plt.xlabel(r'$\sigma_{1}$')
+	plt.ylabel('ln(Evidence)')
+	plt.xlim(blobs[0],blobs[-1])
+	plt.xscale('log')
+	
 	plt.tight_layout()
 	plt.savefig('figures/rendered/global_blobsigma_%s.pdf'%(pdbid))
 	plt.savefig('figures/rendered/global_blobsigma_%s.png'%(pdbid),dpi=300)
-	plt.show()
+	plt.close()

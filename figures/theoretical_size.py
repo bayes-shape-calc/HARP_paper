@@ -65,7 +65,8 @@ def render_theory(theta,r,atom_a,atom_b):
 
 ## from Tilton, Dewan, Petsko Biochemistry 1992, 31, 2469. See fig. 7 T = 0,100.
 ## Also, Carugo amino acids 2018 "atomic displacement parameteres in structural biology" says 6.1 A2, or 5A2 at low temp for trypsinogen and met-myoglobin. see Singh 1980, Hartmann 1982. Hartmann is a Fraunfelder paper -- very good! says it's 5 at cryo temp so use that.
-for approx_B in [37.55,5.,0.]:
+# for approx_B in [37.55,5.,0.]:
+for approx_B in [5.,0.]:
 	dw_a = np.sqrt(approx_B/2.)/(2.*np.pi)
 	print(approx_B,dw_a)
 
@@ -139,4 +140,4 @@ for approx_B in [37.55,5.,0.]:
 
 	plt.savefig('figures/rendered/fig_theoretical_profile_B%.0f.pdf'%(approx_B))
 	plt.savefig('figures/rendered/fig_theoretical_profile_B%.0f.png'%(approx_B),dpi=300)
-	plt.show()
+	plt.close()

@@ -310,7 +310,7 @@ for aa in fig.axes:
 x_data = np.array([x_size[orderi] for orderi in order])
 y_data = np.array([1./(1.+np.exp(mu_bs[orderi])/np.exp(mu_as[orderi])) for orderi in order])
 labels = np.array([res_aa[orderi] for orderi in order])
-# x_label,y_label,record = langevin_labels(labels,x_data,y_data,kbT=.1,l0=.15,k0=10,epsilon=1e-13,dt=.1,gamma = 10,nsteps=4000)
+x_label,y_label,record = langevin_labels(labels,x_data,y_data,kbT=.1,l0=.15,k0=10,epsilon=1e-13,dt=.1,gamma = 10,nsteps=4000)
 # xlabel = record[-100:,:,0].mean(0)
 # ylabel = record[-100:,:,1].mean(0)
 # for i in range(record.shape[1]):
@@ -326,46 +326,13 @@ for i in range(len(labels)):
 		textcoords='data',
 		arrowprops=dict(arrowstyle="->", connectionstyle="arc3")
 	)
-# plt.show()
-#
-# delta = np.min(1./(1.+np.exp(mu_bs)/np.exp(mu_as))) + .1
-# loweraa = ['gly','ser','thr','cys','asp','asn','glu','gln','met','lys','trp']
-# ilow = 0
-# ihigh = 0
-# for i in range(order.size):
-# 	# ax['P'].annotate(res_aa[i], (x_rg[i],np.exp(mu_as[i])/(np.exp(mu_bs[i])+np.exp(mu_as[i]))))
-#
-# 	if res_aa[order[i]].lower() in loweraa:
-# 		ilow += 1
-# 		ax['P'].annotate(
-# 			res_aa[order[i]],
-# 			xy = (x_size[order[i]], 1./(1.+np.exp(mu_bs[order[i]])/np.exp(mu_as[order[i]]))),
-# 			xytext = (ilow*(x_size.max()-x_size.min()+.3)/len(loweraa) + x_min-.1, ilow*delta/len(loweraa)),
-# 			xycoords='data',
-# 			textcoords='data',
-# 			arrowprops=dict(arrowstyle="-", connectionstyle="arc3")
-# 		)
-# 	else:
-# 		ihigh += 1
-# 		ax['P'].annotate(
-# 			res_aa[order[i]],
-# 			xy = (x_size[order[i]], 1./(1.+np.exp(mu_bs[order[i]])/np.exp(mu_as[order[i]]))),
-# 			xytext = (ihigh*(x_size.max()-x_size.min()+.2)/(order.size-len(loweraa)) + x_min, np.min((.95,ihigh*(.3+delta)/(order.size-len(loweraa))+.5))),
-# 			xycoords='data',
-# 			textcoords='data',
-# 			# arrowprops=dict(arrowstyle="-", connectionstyle="arc3")
-# 			arrowprops=dict(arrowstyle="simple", shrink=0.15),
-# 		)
-# plt.show()
+	
+ax['T'].set_ylim(ax['T'].get_xlim()[0],40.)
 
-# fig,ax = cf.make_fig_set_abtautoo(x_aa[keep],mu_as,mu_bs,tau_as,tau_bs,covs)
-# for aa in fig.axes:
-# 	aa.set_xlim(x_aa.min(),x_aa.max())
-# 	aa.set_xticks(x_aa)
-# 	aa.set_xticklabels(res_aa,rotation=90)
-
+ax['P'].set_ylabel(r'$\langle P \rangle_{res}$')
 ax['P'].set_xlabel(r'$R_g (\AA)$')
 ax['B'].set_xlabel(r'$R_g (\AA)$')
+ax['T'].set_xlabel(r'$R_g (\AA)$')
 # ax['P'].grid(axis='x')
 ax['A'].yaxis.set_major_formatter(plt.ScalarFormatter())
 ax['B'].yaxis.set_major_formatter(plt.ScalarFormatter())
@@ -376,69 +343,3 @@ fig.savefig('figures/rendered/EPres_residue_aa_ordered.pdf')
 plt.close()
 
 
-
-#
-# keep = np.array([len(pi) > 2 for pi in P_dna])
-# P_dna = [P_dna[i] for i in range(len(keep)) if keep[i]]
-# ps,mu_as,mu_bs,tau_as,tau_bs,covs = cf.process_sets_hierarchical(P_dna,'figures/models/hmodel_residue_dna.hdf5',nres=5,maxiter=1000,initiates=initiates_dna)
-# fig,ax = cf.make_fig_set_ab(x_dna[keep],mu_as,mu_bs,tau_as,tau_bs,covs)
-# for aa in fig.axes:
-# 	aa.set_xlim(x_dna.min(),x_dna.max())
-# 	aa.set_xticks(x_dna)
-# 	aa.set_xticklabels(res_dna,rotation=90)
-# ax['P'].grid(axis='x')
-# ax['A'].yaxis.set_major_formatter(plt.ScalarFormatter())
-# ax['B'].yaxis.set_major_formatter(plt.ScalarFormatter())
-# ax['A'].yaxis.set_minor_formatter(plt.ScalarFormatter())
-# ax['B'].yaxis.set_minor_formatter(plt.ScalarFormatter())
-# fig.savefig('figures/rendered/fig_residue_dna.png',dpi=300)
-# fig.savefig('figures/rendered/fig_residue_dna.pdf')
-# plt.close()
-#
-# keep = np.array([len(pi) > 2 for pi in P_rna])
-# P_rna = [P_rna[i] for i in range(len(keep)) if keep[i]]
-# ps,mu_as,mu_bs,tau_as,tau_bs,covs = cf.process_sets_hierarchical(P_rna,'figures/models/hmodel_residue_rna.hdf5',nres=5,maxiter=1000,initiates=initiates_rna)
-# fig,ax = cf.make_fig_set_ab(x_rna[keep],mu_as,mu_bs,tau_as,tau_bs,covs)
-# for aa in fig.axes:
-# 	aa.set_xlim(x_rna.min(),x_rna.max())
-# 	aa.set_xticks(x_rna)
-# 	aa.set_xticklabels(res_rna,rotation=90)
-# ax['P'].grid(axis='x')
-# ax['A'].yaxis.set_major_formatter(plt.ScalarFormatter())
-# ax['B'].yaxis.set_major_formatter(plt.ScalarFormatter())
-# ax['A'].yaxis.set_minor_formatter(plt.ScalarFormatter())
-# ax['B'].yaxis.set_minor_formatter(plt.ScalarFormatter())
-# fig.savefig('figures/rendered/fig_residue_rna.png',dpi=300)
-# fig.savefig('figures/rendered/fig_residue_rna.pdf')
-# plt.close()
-#
-#
-#
-# keep = np.array([len(pi) > 5 for pi in P_ns])
-# P_ns = [P_ns[i] for i in range(len(keep)) if keep[i]]
-# res_ns = [res_ns[i] for i in range(len(keep)) if keep[i]]
-# x_ns = np.arange(len(P_ns))
-# ps,mu_as,mu_bs,tau_as,tau_bs,covs = cf.process_sets_hierarchical(P_ns,'figures/models/hmodel_residue_ns.hdf5',nres=20,maxiter=1000)
-#
-# order = (np.exp(mu_as)/(np.exp(mu_as)+np.exp(mu_bs))).argsort()
-# mu_as = mu_as[order]
-# mu_bs = mu_bs[order]
-# tau_as = tau_as[order]
-# tau_bs = tau_bs[order]
-# covs = covs[order]
-# res_nso = [res_ns[i] for i in order]
-#
-# fig,ax = cf.make_fig_set_ab(x_ns,mu_as,mu_bs,tau_as,tau_bs,covs)
-# fig.set_figwidth(18)
-# for aa in fig.axes:
-# 	aa.set_xlim(x_ns.min()-.5,x_ns.max()+.5)
-# 	aa.set_xticks(x_ns)
-# 	aa.set_xticklabels(res_nso,rotation=90)
-# ax['P'].grid(axis='x')
-# # ax['A'].yaxis.set_major_formatter(plt.ScalarFormatter())
-# # ax['B'].yaxis.set_major_formatter(plt.ScalarFormatter())
-# # ax['A'].yaxis.set_minor_formatter(plt.ScalarFormatter())
-# # ax['B'].yaxis.set_minor_formatter(plt.ScalarFormatter())
-# fig.savefig('figures/rendered/fig_residue_ns.png',dpi=300)
-# fig.savefig('figures/rendered/fig_residue_ns.pdf')
-# plt.close()

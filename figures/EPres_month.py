@@ -9,7 +9,7 @@ deposit_date = cf.load_depositdate('./all_results.hdf5')
 P_res = cf.load_P_res('./all_results.hdf5')
 print('loaded')
 
-for ycut in [2000,2014,2018,2019]:
+for ycut in [2018,]:
 	months = np.array(['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'])
 	P_res_months = [[] for _ in range(months.size)]
 	for i in range(len(deposit_date)):
@@ -51,4 +51,4 @@ for ycut in [2000,2014,2018,2019]:
 
 	fig.savefig('figures/rendered/EPres_months_%d-2022.pdf'%(ycut))
 	fig.savefig('figures/rendered/EPres_months_%d-2022.png'%(ycut),dpi=300)
-	plt.show()
+	plt.close()

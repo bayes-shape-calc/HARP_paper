@@ -7,7 +7,7 @@ def get_fnames(pdbid):
 	return os.path.join(odir,'dict_%s.pickle'%(pdbid)),os.path.join(odir,'result_%s.csv'%(pdbid))
 
 def gather_results(fdir,odir,cutoff):
-	log = logger('log_5_collect_results.log')
+	log = logger('log_7_collect_results.log')
 
 	fname = os.path.join(fdir,'PDB_ID_EM_%.2fA.dat'%(cutoff))
 	pdbids = open_list(fname)

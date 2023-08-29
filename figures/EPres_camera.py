@@ -15,8 +15,8 @@ print('loaded')
 
 
 ### apply year cutoff
-ycut = 1900
-rescut = 8.0
+ycut = 2018
+rescut = 8.
 keep =[False for _ in range(len(deposit_date))]
 for i in range(len(deposit_date)):
 	y,m,d = deposit_date[i].split('-')
@@ -56,12 +56,12 @@ for i in range(len(camera)):
 		P_res_camera[camera_index].append(pp)
 print('sorted')
 
-
-
-### testing -- cap at 2000
-for i in range(len(P_res_camera)):
-	if len(P_res_camera[i]) > 2000:
-		P_res_camera[i] = [P_res_camera[i][rvs] for rvs in np.random.randint(low=0,high=len(P_res_camera),size=2000)]
+#
+#
+# ### testing -- cap at 2000
+# for i in range(len(P_res_camera)):
+# 	if len(P_res_camera[i]) > 2000:
+# 		P_res_camera[i] = [P_res_camera[i][rvs] for rvs in np.random.randint(low=0,high=len(P_res_camera),size=2000)]
 
 
 
@@ -69,12 +69,27 @@ x = np.arange(len(camera_types))
 # # ps,fig,ax = cf.process_sets_indiv(x,P_res_months)
 ps,mu_as,mu_bs,tau_as,tau_bs,covs = cf.process_sets_hierarchical(P_res_camera,'figures/models/hmodel_camera.hdf5',nres=5)
 
+
+# print(covs.shape)
+# print(mu_as.shape)
+# print(x.shape)
+# print(tau_as.shape)
+order = (np.exp(mu_as)/(np.exp(mu_as)+np.exp(mu_bs))).argsort()
+mu_as = mu_as[order]
+mu_bs = mu_bs[order]
+tau_as = tau_as[order]
+tau_bs = tau_bs[order]
+covs = covs[order]
+camera_types = camera_types[order]
+
+
+
 fig,ax = cf.make_fig_set_abtautoo(x,mu_as,mu_bs,tau_as,tau_bs,covs)
 
 for aa in fig.axes:
 	aa.set_xlim(x.min()-.1,x.max()+.1)
 	aa.set_xticks(x)
-	aa.set_xticklabels(camera_types,rotation=45,ha='right')
+	aa.set_xticklabels(camera_types,rotation=75,ha='right',fontsize=6)
 # ax['P'].set_xlabel('Month')
 # ax['B'].set_xlabel('Month')
 # ax['P'].set_ylim(.1,.3)
@@ -82,7 +97,7 @@ for aa in fig.axes:
 #
 
 
-ax['P'].set_ylim(0.,.55)
+ax['P'].set_ylim(0.2,.6)
 ax['A'].yaxis.set_major_formatter(plt.ScalarFormatter())
 ax['B'].yaxis.set_major_formatter(plt.ScalarFormatter())
 ax['A'].yaxis.set_minor_formatter(plt.ScalarFormatter())
@@ -92,4 +107,4 @@ fig.subplots_adjust(bottom=.22)
 #
 fig.savefig('figures/rendered/EPres_camera.pdf')
 fig.savefig('figures/rendered/EPres_camera.png',dpi=300)
-plt.show()
+plt.close()

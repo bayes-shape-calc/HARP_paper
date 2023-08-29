@@ -33,10 +33,11 @@ print(average_normalized)
 
 ax.text(average_normalized, 0.98, r'$\langle r \rangle = %.2f \AA$   '%(average_normalized), color='r', ha='right', va='top', rotation=0, fontsize=10, transform=ax.get_xaxis_transform())
 props = dict( facecolor='white')
-ax.text(0.85, 0.975, 'n=%d'%(hist.shape[0]), transform=ax.transAxes, fontsize=10, verticalalignment='top', bbox=props)
+ax.text(0.775, 0.975, 'N=%d\nn=%d'%(hist.shape[0],hist.sum()), transform=ax.transAxes, fontsize=10, verticalalignment='top', bbox=props)
 
 ax.set_ylabel('Probability')
 ax.set_xlabel(r'$r$, closest pairwise distance between residue COM ($\AA$)')
+plt.tight_layout()
 plt.savefig('figures/rendered/inter_residue_distances_closest_allpdb.png')
 plt.savefig('figures/rendered/inter_residue_distances_closest_allpdb.pdf')
-plt.show()
+plt.close()

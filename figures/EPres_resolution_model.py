@@ -59,7 +59,8 @@ print('loaded')
 
 
 # for ycut in [2019,2018,2014,2000]:
-for ycut in [2000,2014,2018,2019]:
+# for ycut in [2000,2014,2018,2019]:
+for ycut in [2018,]:
 	res = np.arange(0,8.,.1)
 	P_res_res = [[] for _ in range(res.size)]
 	for i in range(len(deposit_date)):
@@ -106,34 +107,36 @@ for ycut in [2000,2014,2018,2019]:
 
 	###### plotting
 
-	fig,ax = cf.make_fig_set_abtautoo(resk,mu_as,mu_bs,tau_as,tau_bs,covs)
+	fig,ax = cf.make_fig_set_ab(resk,mu_as,mu_bs,tau_as,tau_bs,covs)
 
 	for aa in fig.axes:
 		aa.set_xticks(np.arange(8+1))
 		aa.set_xticklabels(np.arange(8+1))
 		aa.set_xlim(0.,8.)
-	ax['P'].set_xlabel('Resolution ($\AA$)')
-	ax['B'].set_xlabel('Resolution ($\AA$)')
+	ax['P'].set_xlabel('FSC Resolution ($\AA$)')
+	ax['B'].set_xlabel('FSC Resolution ($\AA$)')
 	# ax['A'].set_ylim(6e-2,2e1)
 	ax['A'].set_ylim(6e-2,.5e1)
 	ax['B'].set_ylim(.06,6.)
 	
+	ax['P'].set_ylabel(r'$\langle P \rangle$')
+	
 	
 
 
-	ax['P'].plot(res,ymodel,'tab:blue',alpha=1.,zorder=+3,lw=1.5)
+	ax['P'].plot(res,ymodel,'k',alpha=1.,zorder=+3,lw=1.5)
 
 	ax['P'].plot([0,(.5-b1)/m1],[.5,.5],color='k',ls='--')
 	ax['P'].plot([(.5-b1)/m1,(.5-b1)/m1],[-.02,.5],color='k',ls='--')
 
-	anchored_text = AnchoredText(r'$y_{high}$ = %.3fx + %.2f'%(m1,b1) +'\n' + r'$y_{low }$ = %.3fx + %.2f'%(m2,b2) +'\n' + r'$\langle\langle P_{res}\rangle\rangle (%.2f \AA)$ = 0.5'%((.5-b1)/m1), loc=1,prop={'ha':'right'})
+	anchored_text = AnchoredText(r'$y_{high}$ = %.3fx + %.2f'%(m1,b1) +'\n' + r'$y_{low }$ = %.3fx + %.2f'%(m2,b2) +'\n' + r'$\langle P\rangle (%.2f \AA)$ = 0.5'%((.5-b1)/m1), loc=1,prop={'ha':'right'})
 	ax['P'].add_artist(anchored_text)
 
 
-	fig.savefig('figures/rendered/EPres_resolution_model_%d-2022.pdf'%(ycut))
-	fig.savefig('figures/rendered/EPres_resolution_model_%d-2022.png'%(ycut),dpi=300)
+	fig.savefig('figures/rendered/EPres_resolution_model_%d-2022.pdf'%(ycut),dpi=600)
+	fig.savefig('figures/rendered/EPres_resolution_model_%d-2022.png'%(ycut),dpi=600)
 
-	plt.show()
+	plt.close()
 	
 	
 	# break

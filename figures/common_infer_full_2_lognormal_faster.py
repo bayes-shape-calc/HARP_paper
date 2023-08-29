@@ -565,7 +565,10 @@ def process_sets_hierarchical(p_ress,unique_name='',initiates=None,maxiter=1000,
 		ps = []
 		with h5py.File(unique_name,'r') as f:
 			for i in range(len(p_ress)):
-				ps.append(f['ps/%d'%(i)][:])
+				try:
+					ps.append(f['ps/%d'%(i)][:])
+				except:
+					pass
 			mu_as = f['mu_as'][:]
 			mu_bs = f['mu_bs'][:]
 			tau_as = f['tau_as'][:]

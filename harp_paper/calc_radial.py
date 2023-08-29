@@ -58,7 +58,7 @@ def run_radial_pdbid(pdbid,fdir,job_i,total,out_dir):
 
 def calc_radial(fdir,out_dir,cutoff,num_workers):
 	t0 = time.time()
-	log = logger('log_2B_radial.log')
+	log = logger('log_3_radial.log')
 
 	num_workers = np.min((num_workers,multiprocessing.cpu_count()))
 	report_delay = 10.0 ## sec

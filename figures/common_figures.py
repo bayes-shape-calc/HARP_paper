@@ -133,10 +133,13 @@ def load_exposure(fname):
 	exposure = _load_float('exposure',fname)
 	return exposure
 def load_numparticles(fname):
-	num = _log_int('num particles',fname)
+	num = _load_float('num particles',fname)
+	return num
+def load_numparticles_selected(fname):
+	num = _load_float('num particles selected',fname)
 	return num
 def load_numimgs(fname):
-	num = _log_int('num images',fname)
+	num = _load_float('num images',fname)
 	return num
 def load_formula_weight(fname):
 	soft = _load_float('formula weight',fname)
@@ -171,10 +174,19 @@ def load_camera(fname):
 
 def load_software_recon(fname):
 	soft = _load_string('software name - reconstruction',fname)
+	version = _load_string('software version - reconstruction',fname)
 	for i in range(len(soft)):
 		if soft[i] == '?':
 			soft[i] = 'missing entry'
-	return soft
+	return soft,version
+
+def load_software_model(fname):
+	soft = _load_string('software name - model refinement',fname)
+	version = _load_string('software version - model refinement',fname)
+	for i in range(len(soft)):
+		if soft[i] == '?':
+			soft[i] = 'missing entry'
+	return soft,version
 
 def load_journal(fname):
 	journal = _load_string('citation journal',fname)
@@ -198,7 +210,12 @@ def load_journal(fname):
 			journal[i] = 'other'
 	return journal
 
-
+def load_cryogen(fname):
+	cryogen = _load_string('cryogen',fname)
+	return cryogen
+def load_humidity(fname):
+	humidity = _load_float('humidity',fname)
+	return humidity
 
 # np_keys = ['citation year','cs','deposit year','dose','exposure','formula weight','humidity','mag','molwt','num frames','num imgs','num particles','num particles selected','pH','resolution','voltage']
 #
@@ -345,27 +362,31 @@ def make_fig_set_ab(xs,mu_as,mu_bs,tau_as,tau_bs,covs):
 	alphas = np.exp(mu_as)
 	betas = np.exp(mu_bs)
 	ps = alphas/(alphas+betas)
+	
+	color_p = '#4E74BA' #'black
+	color_a = '#45ACBA' #'darkblue'
+	color_b = '#BA8861' #'darkred'
 
 	yerr = np.zeros((2,xs.size))
 	for i in range(xs.size):
 		yerr[:,i] = hpdi(qp[i],.95)
 	# ax2['P'].errorbar(xs,ps,yerr=yerr,marker='o',color='k')
-	ax2['P'].plot(xs,ps,marker='.',color='black',lw=.75,markersize=5)
-	ax2['P'].fill_between(xs,yerr[0],yerr[1],color='black',alpha=.2,zorder=2,edgecolor='black')
+	ax2['P'].plot(xs,ps,marker='.',color=color_p,lw=.75,markersize=5)
+	ax2['P'].fill_between(xs,yerr[0],yerr[1],color=color_p,alpha=.2,zorder=2,edgecolor=color_p)
 	ax2['P'].set_ylim(-.02,1.02)
 
 	yerr = np.zeros((2,xs.size))
 	for i in range(xs.size):
 		yerr[:,i] = hpdi(qa[i],.95)
 	# ax2['A'].errorbar(xs,alphas,yerr=yerr,marker='o',color='b',label=r'$\langle\alpha\rangle$')
-	ax2['A'].fill_between(xs,yerr[0],yerr[1],color='b',alpha=.2,zorder=2,edgecolor='darkblue')
-	ax2['A'].plot(xs,alphas,marker='.',color='b',label=r'$\langle\alpha\rangle$',lw=.75,markersize=5)
+	ax2['A'].fill_between(xs,yerr[0],yerr[1],color=color_a,alpha=.2,zorder=2,edgecolor=color_a)
+	ax2['A'].plot(xs,alphas,marker='.',color=color_a,label=r'$\langle\alpha\rangle$',lw=.75,markersize=5)
 	yerr = np.zeros((2,xs.size))
 	for i in range(xs.size):
 		yerr[:,i] = hpdi(qb[i],.95)
 	# ax2['B'].errorbar(xs,betas,yerr=yerr,marker='s',color='r',label=r'$\langle\beta\rangle$')
-	ax2['B'].fill_between(xs,yerr[0],yerr[1],color='r',alpha=.2,zorder=2,edgecolor='darkred')
-	ax2['B'].plot(xs,betas,marker='.',color='r',label=r'$\langle\beta\rangle$',lw=.75,markersize=5)
+	ax2['B'].fill_between(xs,yerr[0],yerr[1],color=color_b,alpha=.2,zorder=2,edgecolor=color_b)
+	ax2['B'].plot(xs,betas,marker='.',color=color_b,label=r'$\langle\beta\rangle$',lw=.75,markersize=5)
 
 	ax2['B'].set_yscale('log')
 	ax2['A'].set_yscale('log')
@@ -377,7 +398,7 @@ def make_fig_set_ab(xs,mu_as,mu_bs,tau_as,tau_bs,covs):
 	# ax2[2].errorbar(xs,np.exp(np.sqrt(1./tau_as)),yerr=qsa.std(1),marker='o',color='b',label=r'$Std(\alpha)$')
 	# ax2[2].set_yscale('log')
 	# ax2[2].legend()#loc=4)
-	ax2['P'].set_ylabel(r'$\langle\langle P_{res} \rangle\rangle$')
+	ax2['P'].set_ylabel(r'$\langle P \rangle$')
 
 	ax2['A'].set_xticklabels(())
 	fig2.subplots_adjust(left=.08,right=.99,top=.98,bottom=.15,wspace=.21,hspace=.05)
@@ -403,43 +424,48 @@ def make_fig_set_abtautoo(xs,mu_as,mu_bs,tau_as,tau_bs,covs):
 	betas = np.exp(mu_bs)
 	ps = alphas/(alphas+betas)
 
+
+	color_p = '#4E74BA' #'black
+	color_a = '#45ACBA' #'darkblue'
+	color_b = '#BA8861' #'darkred'
+
 	yerr = np.zeros((2,xs.size))
 	for i in range(xs.size):
 		yerr[:,i] = hpdi(qp[i],.95)
 	# ax2['P'].errorbar(xs,ps,yerr=yerr,marker='o',color='k')
-	ax2['P'].plot(xs,ps,marker='.',color='black',lw=.75,markersize=5)
-	ax2['P'].fill_between(xs,yerr[0],yerr[1],color='black',alpha=.2,zorder=2,edgecolor='black')
+	ax2['P'].plot(xs,ps,marker='.',color=color_p,lw=.75,markersize=5)
+	ax2['P'].fill_between(xs,yerr[0],yerr[1],color=color_p,alpha=.3,zorder=2,edgecolor=color_p)
 	ax2['P'].set_ylim(-.02,1.02)
 
 	yerr = np.zeros((2,xs.size))
 	for i in range(xs.size):
 		yerr[:,i] = hpdi(qa[i],.95)
 	# ax2['A'].errorbar(xs,alphas,yerr=yerr,marker='o',color='b',label=r'$\langle\alpha\rangle$')
-	ax2['A'].fill_between(xs,yerr[0],yerr[1],color='b',alpha=.2,zorder=2,edgecolor='darkblue')
-	ax2['A'].plot(xs,alphas,marker='.',color='b',label=r'$\langle\alpha\rangle$',lw=.75,markersize=5)
+	ax2['A'].fill_between(xs,yerr[0],yerr[1],color=color_a,alpha=.3,zorder=2,edgecolor=color_a)
+	ax2['A'].plot(xs,alphas,marker='.',color=color_a,label=r'$\langle\alpha\rangle$',lw=.75,markersize=5)
 	
 	
 	yerr = np.zeros((2,xs.size))
 	for i in range(xs.size):
 		yerr[:,i] = hpdi(qb[i],.95)
 	# ax2['B'].errorbar(xs,betas,yerr=yerr,marker='s',color='r',label=r'$\langle\beta\rangle$')
-	ax2['B'].fill_between(xs,yerr[0],yerr[1],color='r',alpha=.2,zorder=2,edgecolor='darkred')
-	ax2['B'].plot(xs,betas,marker='.',color='r',label=r'$\langle\beta\rangle$',lw=.75,markersize=5)
+	ax2['B'].fill_between(xs,yerr[0],yerr[1],color=color_b,alpha=.3,zorder=2,edgecolor=color_b)
+	ax2['B'].plot(xs,betas,marker='.',color=color_b,label=r'$\langle\beta\rangle$',lw=.75,markersize=5)
 	
 	
 	yerr = np.zeros((2,xs.size))
 	for i in range(xs.size):
 		yerr[:,i] = hpdi(rvs[:,:,2][i],.95)
 	# ax2['R'].errorbar(xs,betas,yerr=yerr,marker='s',color='r',label=r'$\langle\beta\rangle$')
-	ax2['R'].fill_between(xs,yerr[0],yerr[1],color='b',alpha=.2,zorder=2,edgecolor='darkblue')
-	ax2['R'].plot(xs,tau_as,marker='.',color='b',label=r'$\tau_\alpha$',lw=.75,markersize=5)
+	ax2['R'].fill_between(xs,yerr[0],yerr[1],color=color_a,alpha=.3,zorder=2,edgecolor=color_a)
+	ax2['R'].plot(xs,tau_as,marker='.',color=color_a,label=r'$\tau_\alpha$',lw=.75,markersize=5)
 	
 	yerr = np.zeros((2,xs.size))
 	for i in range(xs.size):
 		yerr[:,i] = hpdi(rvs[:,:,3][i],.95)
 	# ax2['T'].errorbar(xs,betas,yerr=yerr,marker='s',color='r',label=r'$\langle\beta\rangle$')
-	ax2['T'].fill_between(xs,yerr[0],yerr[1],color='r',alpha=.2,zorder=2,edgecolor='darkred')
-	ax2['T'].plot(xs,tau_bs,marker='.',color='r',label=r'$\tau_\beta$',lw=.75,markersize=5)
+	ax2['T'].fill_between(xs,yerr[0],yerr[1],color=color_b,alpha=.3,zorder=2,edgecolor=color_b)
+	ax2['T'].plot(xs,tau_bs,marker='.',color=color_b,label=r'$\tau_\beta$',lw=.75,markersize=5)
 	
 	
 
@@ -459,7 +485,7 @@ def make_fig_set_abtautoo(xs,mu_as,mu_bs,tau_as,tau_bs,covs):
 	# ax2[2].errorbar(xs,np.exp(np.sqrt(1./tau_as)),yerr=qsa.std(1),marker='o',color='b',label=r'$Std(\alpha)$')
 	# ax2[2].set_yscale('log')
 	# ax2[2].legend()#loc=4)
-	ax2['P'].set_ylabel(r'$\langle\langle P_{res} \rangle\rangle$')
+	ax2['P'].set_ylabel(r'$\langle P \rangle$')
 
 	ax2['A'].set_xticklabels(())
 	fig2.subplots_adjust(left=.08,right=.99,top=.98,bottom=.15,wspace=.21,hspace=.05)

@@ -56,7 +56,7 @@ def progress_check(fdir,odir,cutoff):
 	Returns: a filename where the list of PDB IDs is written
 	'''
 
-	log = logger('log_4_check_progress.log')
+	log = logger('log_6_check_progress.log')
 	fname = os.path.join(fdir,'PDB_ID_EM_%.2fA.dat'%(cutoff))
 
 	### Download the mmcifs

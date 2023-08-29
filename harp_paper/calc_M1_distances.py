@@ -78,7 +78,7 @@ def run_disthist_pdbid(pdbid,fdir,job_i,total,out_dir):
 
 def calc_disthist(fdir,out_dir,cutoff,num_workers):
 	t0 = time.time()
-	log = logger('log_2c_disthist.log')
+	log = logger('log_4_disthist.log')
 
 	num_workers = np.min((num_workers,multiprocessing.cpu_count()))
 	report_delay = 10.0 ## sec

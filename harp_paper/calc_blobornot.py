@@ -78,15 +78,18 @@ def calc_blobornot(fdir,out_dir,cutoff,num_workers):
 	if not os.path.exists(out_dir):
 		os.mkdir(out_dir)
 
-	pdbids = open_list(fname)
-	pdbids = pdbids[::-1]
 
-	log("%s\nProcessing %d PDBs\n==================================="%(str(time.ctime()),len(pdbids)))
+
+
 
 	## first pass is 'small' with multiprocessing, second pass is 'large' with one cpu to avoid memory issues 
-	job_i = 0
-	job_total = len(pdbids)
-	for nw,ab,logit in zip([num_workers,1],[False,True],[True,False]):
+	for nw,ab,logit,msg in zip([num_workers,1],[False,True],[True,False],['Small','Large']):
+		pdbids = open_list(fname)
+		pdbids = pdbids[::-1]
+		log("%s\nProcessing %d PDBs (%s)\n==================================="%(str(time.ctime()),len(pdbids),msg))
+		job_i = 0
+		job_total = len(pdbids)
+		print('PASS',nw,ab,logit)
 		jobs = []
 		t1 = time.time()
 		while True:

@@ -178,7 +178,7 @@ def parse_mmcif(pdbid,fdir,odir):
 def extract_metadata(fdir,odir,cutoff,overwrite=False):
 
 	fname = os.path.join(fdir,'PDB_ID_EM_%.2fA.dat'%(cutoff))
-	log = logger('log_3_extract_mmcif.log')
+	log = logger('log_5_extract_mmcif.log')
 
 	pdbids = open_list(fname)
 
