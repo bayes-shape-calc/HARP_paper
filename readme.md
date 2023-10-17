@@ -21,6 +21,8 @@ Add one these arguments to execute that step (*e.g.*, `python run_paper.py downl
 * `remove_empty`: Remove all files that have been touched, but do not have any data in them. Code in `./harp_paper/common_paper.py`
 * `'disthists`: Calculates the distance between the closest residue for each residue of a molecule. Code in `./harp_paper/calc_M1_distances.py`
 
+### Archived Results
+The HDF5 file containing the HARP results is available [on Zenodo](https://zenodo.org/records/10011336) !()[https://zenodo.org/badge/DOI/10.5281/zenodo.10011336.svg].
 
 ## Make Figures
 The `figures/run_all_figures.py` script generates all figures. Once you have the `all_*.hdf5` files, then you can run `python figures/run_all_figures.py`. Note this should be run from the top-level directory, which is where the HDF5 files should reside. Rendered figures are stored in `/figures/rendered` as .pdf and .png format files. Generally you should run these from the top level directory as `python figures/(script_name_here).py`. Many of the EPres scripts require you to have `all_results.hdf5` and `all_radial.hdf5` present in the top directory.
