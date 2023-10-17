@@ -1,8 +1,8 @@
 # HARP Manuscript
 This contains scripts to set up all of the HARP calculations, *etc.* presented in the HARP manuscript.
 
-## `run_paper.py`
-This script allows you to work through all the steps required to calculate $\{P\}$ and extract all requird data for all the cryoEM structures in the PDB. Use the following flags
+## Run Calculations
+The `run_paper.py` script allows you to work through all the steps required to calculate $\{P\}$ and extract all requird data for all the cryoEM structures in the PDB. Use the following flags
 
 * `--data_dir /file/path/here` for where the PDB and EMDB files will be stored
 * `--results_dir /file/path/here` for where the results files will be stored
@@ -22,8 +22,8 @@ Add one these arguments to execute that step (*e.g.*, `python run_paper.py downl
 * `'disthists`: Calculates the distance between the closest residue for each residue of a molecule. Code in `./harp_paper/calc_M1_distances.py`
 
 
-## `figures/run_all_figures.py`
-This generates all figures. Once you've got the `all_*.hdf5` files, then you can run `python figures/run_all_figures.py`. Note this should be run from the top-level directory, which is where the HDF5 files should reside. Rendered figures are stored in `/figures/rendered` as .pdf and .png format files. Generally you should run these from the top level directory as `python figures/(script_name_here).py`. Many of the EPres scripts require you to have `all_results.hdf5` and `all_radial.hdf5` present in the top directory.
+## Make Figures
+The `figures/run_all_figures.py` script generates all figures. Once you have the `all_*.hdf5` files, then you can run `python figures/run_all_figures.py`. Note this should be run from the top-level directory, which is where the HDF5 files should reside. Rendered figures are stored in `/figures/rendered` as .pdf and .png format files. Generally you should run these from the top level directory as `python figures/(script_name_here).py`. Many of the EPres scripts require you to have `all_results.hdf5` and `all_radial.hdf5` present in the top directory.
 
 
 ### MS Figures
