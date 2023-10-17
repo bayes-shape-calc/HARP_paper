@@ -2,10 +2,6 @@ import common_figures as cf
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-import numpy as np
-import matplotlib.pyplot as plt
-
 def langevin_labels(labels,x_data,y_data,nsteps=1000,k0=10.,epsilon=1e-12,sigma=.1,dt=.05,l0=.15,kbT=10.,gamma=1.):
 	#
 	# nsteps = 1000

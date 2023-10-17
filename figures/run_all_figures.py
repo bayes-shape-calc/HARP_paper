@@ -1,6 +1,6 @@
 ms_scripts = [
 	"figures/rayleigh_overlap.py",
-	# "figures/global_adfscan.py", ## long time, >20 min
+	"figures/global_adfscan.py", ## long time, >20 min
 	"figures/EPres_year.py",
 	"figures/EPres_resolution_model.py",
 	"figures/EPres_imgs.py",
@@ -13,7 +13,7 @@ ms_scripts = [
 
 si_scripts = [
 	"figures/theoretical_size.py",
-	# "figures/global_blobsigma.py", ## ~6 min
+	"figures/global_blobsigma.py", ## ~6 min
 	"figures/inter_residue_distances_allpdb.py",
 	"figures/EPres_camera.py",
 	"figures/EPres_reconstructionsoftware.py",

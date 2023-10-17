@@ -1,5 +1,3 @@
-## 23
-
 #### might have to re-run a while to get the first set to not crash
 
 import common_figures as cf

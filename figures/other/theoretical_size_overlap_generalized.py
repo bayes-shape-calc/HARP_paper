@@ -35,7 +35,7 @@ def find_sigma_resolution_criterion(distance_target,density_fraction):
 
 
 fraction = 0.5
-for target_bondlength in [1.54,1.536,4.31,10.5]:
+for target_bondlength in [1.531,4.31,10.5]:
 	sigma_opt = find_sigma_resolution_criterion(target_bondlength,fraction)
 	midpoint_value = np.exp(-.5/(sigma_opt**2.)*(target_bondlength/2)**2.)
 

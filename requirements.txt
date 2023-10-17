@@ -3,5 +3,6 @@ h5py
 matplotlib
 scipy
 tqdm
-emcee
-corner
+numpy
+numba
+

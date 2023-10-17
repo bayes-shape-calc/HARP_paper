@@ -1,7 +1,3 @@
-## Broken?
-
-## 23
-
 import common_figures as cf
 import numpy as np
 import matplotlib.pyplot as plt

@@ -1,5 +1,6 @@
 import harp
 import numpy as np
+import matplotlib.pyplot as plt
 
 pdbids = ['6cl7','6cl8','6cl9','6cla','6clb']
 emdbids = ['7490','7491','7492','7493','7494']
@@ -98,7 +99,6 @@ for i in range(len(pdbids)):
 	grid,density = harp.density.load(map_local)
 	adfs,_ = harp.bayes_model_select.gen_adfsblobs(adf_low=.25,adf_high=1.,adf_n=50)
 
-	# print('\n%s===='%(pdbids[i]))
 	
 	for resid in mol.unique_residues:
 		subresidue = mol.get_residue(resid)
@@ -112,9 +112,6 @@ for i in range(len(pdbids)):
 			decarboxylated.resname[cap] = 'HCAP'
 			decarboxylated.element[cap] = 'H'
 			
-			# keep = np.bitwise_not(np.isin(subresidue.atomname,['CD','OE1','OE2']))
-			# decarboxylated = subresidue.get_set(keep)
-			
 		elif resname == 'ASP': ## ['CG','OD1','OD2']
 			#### same as above...
 			keep = np.bitwise_not(np.isin(subresidue.atomname,['OD1','OD2']))
@@ -123,11 +120,7 @@ for i in range(len(pdbids)):
 			decarboxylated.resname[cap] = 'HCAP'
 			decarboxylated.element[cap] = 'H'
 			
-			# keep = np.bitwise_not(np.isin(subresidue.atomname,['CG','OD1','OD2']))
-			# decarboxylated = subresidue.get_set(keep)
-			
 		else:
-			# print(resid,resname)
 			continue
 			
 		
@@ -143,7 +136,6 @@ for i in range(len(pdbids)):
 		R = np.exp(lnev) ## equal a priori priors
 		prob = np.nansum(R[adfs.size:])/np.nansum(R)
 
-		# print (resid,resname,prob)
 		if not resid in report:
 			report[resid] = []
 		report[resid].append([pdbids[i],resid,resname,patomic[0],patomicminus[0],prob])
@@ -166,13 +158,8 @@ with open(fdir+'Decarboxylation_ProteinaseK.txt','w') as f:
 
 doses = [.86,2.6,4.3,6.,7.8] 
 
-# keepers = [132,148,153]
 datas = []
 for resid in report.keys():
-	#
-	# if resid in keepers:
-	# 	print(resid)
-		# print(report[resid])
 	data = []
 	for i in range(len(report[resid])):
 		line = report[resid][i]
@@ -181,10 +168,9 @@ for resid in report.keys():
 	datas.append(data)
 datas = np.array(datas)
 
-import matplotlib.pyplot as plt
 mu = np.mean(datas[:,:,1],axis=0)
 sem = np.std(datas[:,:,1],axis=0)/np.sqrt(0.+datas.shape[0])
-# plt.fill_between(doses,mu-sem,mu+sem,color='tab:blue',alpha=.3)
+
 plt.errorbar(doses,mu,yerr=sem,linestyle='None',marker='o',color='tab:blue')
 plt.xlabel(r'Dose ($e^{-} \AA^{-2}$)')
 plt.ylabel(r'Average $P_{-CO_2}$ for Glu or Asp')
@@ -195,18 +181,3 @@ plt.savefig('figures/rendered/fig_decarb_proteinasek.pdf')
 plt.savefig('figures/rendered/fig_decarb_proteinasek.png')
 plt.close()
 
-
-
-'''
-Glu132
-Glu148
-
-Glu153 (original claim) = complicated
-glu155 goes backwards
-asp170 messed up 
-
-
-
-
-
-'''

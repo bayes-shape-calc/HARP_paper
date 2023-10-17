@@ -3,10 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-import numpy as np
-import matplotlib.pyplot as plt
-
-
 deposit_date = cf.load_depositdate('./all_results.hdf5')
 P_res = cf.load_P_res('./all_results.hdf5')
 residues = cf.load_residues('./all_results.hdf5')

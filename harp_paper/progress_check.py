@@ -1,4 +1,3 @@
-## 23
 import os
 from .common_paper import logger,open_list,check_results,save_list,touch
 import harp

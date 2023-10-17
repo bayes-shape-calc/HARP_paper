@@ -1,5 +1,3 @@
-## 23
-
 import harp
 import numpy as np
 import numba as nb
@@ -7,7 +5,7 @@ import matplotlib.pyplot as plt
 harp.models.use_c()
 
 
-basedir = '../testdb'
+basedir = './figures'
 # for pdbid in ['6j6j','6j6k','7a4m','6z6u','8b0x']:
 for pdbid in ['7a4m']:
 	## Preparation

@@ -1,5 +1,3 @@
-## 23
-
 ##  L.-M. Peng, Electron atomic scattering factors and scattering potentials of crystals. Micron 30, 625–648 (1999).
 ##  H. Rullgård, L.-G. Öfverstedt, S. Masich, B. Daneholt, O. Öktem, Simulation of transmission electron microscope images of biological specimens: SIMULATION OF TEM IMAGES OF BIOLOGICAL SPECIMENS. Journal of Microscopy 243, 234–256 (2011).
 
