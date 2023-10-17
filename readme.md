@@ -1,5 +1,5 @@
 # HARP Manuscript
-This contains scripts to set up all of the HARP calculations, *etc.* presented in the HARP manuscript.
+This contains scripts to set up all of the HARP calculations, *etc.* presented in the HARP manuscript. See the (HARP repository)[https://github.com/bayes-shape-calc/HARP_paper] and the (HARP website)[https://bayes-shape-calc.github.io/HARP/] for more information.
 
 ## Run Calculations
 The `run_paper.py` script allows you to work through all the steps required to calculate $\{P\}$ and extract all requird data for all the cryoEM structures in the PDB. Use the following flags
