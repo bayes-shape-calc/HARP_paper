@@ -51,8 +51,10 @@ def run_obabel(aa_list,fdir):
 			pass
 
 def get_xyz(fn):
-	from blobornot import io
+	from harp import io
 	mol = io.mmcif.load_mmcif_dict(fn)
+	assert len(mol) == 1
+	mol = mol[0]
 	mas = mol['_atom_site']
 	atoms = np.array([masi[1] for masi in mas[1]])
 	heavy = atoms != 'H'
@@ -164,7 +166,7 @@ def makefig_show_aas(figdir,aadir):
 
 def makefig_cartoon_pnot(figdir,aadir):
 	logging.debug('Cartoon figure: making pnot')
-	from blobornot import density,models
+	from harp import density,models
 	aas = ['Phe','Ala']
 	blist = [
 	[[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[3,6],[6,7],[7,8],[8,9],[8,10],[7,11]],
@@ -188,17 +190,22 @@ def makefig_cartoon_pnot(figdir,aadir):
 				x = np.linspace(origin[0],origin[0]+nxyz[0]*dxyz[0],nxyz[0])
 				y = np.linspace(origin[1],origin[1]+nxyz[1]*dxyz[1],nxyz[1])
 				cmap = plt.cm.plasma
+				weights = np.ones(50)
 				if j == 1:
-					moldensity = models._render_model(grid.origin,grid.dxyz,grid.nxyz,xyz,.4,8,.0)
+					moldensity = models.density_atoms(grid,xyz,sigma=.4)
+					# moldensity = models._render_model_python(grid.origin,grid.dxyz,grid.nxyz,xyz,weights,.4,8,.0)
 					title = r'$\mathrm{\sigma_{atom}=0.4\AA}$'
 				elif j == 2:
-					moldensity = models._render_model(grid.origin,grid.dxyz,grid.nxyz,xyz,.7,8,.0)
+					moldensity = models.density_atoms(grid,xyz,sigma=.7)
+					# moldensity = models._render_model_python(grid.origin,grid.dxyz,grid.nxyz,xyz,weights,.7,8,.0)
 					title = r'$\mathrm{\sigma_{atom}=0.7\AA}$'
 				elif j == 3:
-					moldensity = models._render_model(grid.origin,grid.dxyz,grid.nxyz,com[None,:],1.5,8,.0)
+					moldensity = models.density_point(grid,com,sigma=1.5)
+					# moldensity = models._render_model_python(grid.origin,grid.dxyz,grid.nxyz,com[None,:],weights,1.5,8,.0)
 					title = r'$\mathrm{\sigma_{blob}=1.5\AA}$'
 				elif j == 4:
-					moldensity = models._render_model(grid.origin,grid.dxyz,grid.nxyz,com[None,:],2.5,8,.0)
+					moldensity = models.density_point(grid,com,sigma=2.5)
+					# moldensity = models._render_model_python(grid.origin,grid.dxyz,grid.nxyz,com[None,:],weights,2.5,8,.0)
 					title = r'$\mathrm{\sigma_{blob}=2.5\AA}$'
 
 				if j > 0:
@@ -223,7 +230,7 @@ def makefig_cartoon_pnot(figdir,aadir):
 
 def makefig_cartoon_shape(figdir,aadir):
 	logging.debug('Cartoon figure: making ms_shape')
-	from blobornot import density,models,evidence
+	from harp import density,models,evidence
 	fig,ax = plt.subplots(2,2,figsize=(5,4))
 	fig.subplots_adjust(left=.05,right=.95,top=.9,bottom=.1,hspace=.2,wspace=.25)
 	aa = 'Phe'
@@ -246,7 +253,9 @@ def makefig_cartoon_shape(figdir,aadir):
 
 	np.random.seed(666)
 	####
-	moldensity = models._render_model(grid.origin,grid.dxyz,grid.nxyz,xyz,.2,8,.0)
+	models.use_python()
+	moldensity = models.density_atoms(grid,xyz,sigma=.2,nsigma=8)
+	# moldensity = models._render_model(grid.origin,grid.dxyz,grid.nxyz,xyz,.2,8,.0)
 	for i in range(20):
 		theta = np.deg2rad(np.random.normal()*9.)
 		# theta = np.deg2rad(i*.4)
@@ -257,7 +266,8 @@ def makefig_cartoon_shape(figdir,aadir):
 		# xyz2 += com[None,:]
 		# xyz2[:,:2] += np.random.normal(size=2)*.25
 		xyz2[:,:2] += np.random.normal(size=(xyz.shape[0],2))*.238
-		moldensity += models._render_model(grid.origin,grid.dxyz,grid.nxyz,xyz2,.2,8,.0)*(1.+np.random.rand()*.2)
+		moldensity += models.density_atoms(grid,xyz,sigma=.2,nsigma=8)*(1.+np.random.rand()*.2)
+		# moldensity += models._render_model(grid.origin,grid.dxyz,grid.nxyz,xyz2,.2,8,.0)*(1.+np.random.rand()*.2)
 		# plot_aa(atoms,xyz2,ax,aa,blist[0])
 
 	moldensity = moldensity.sum(2)
@@ -267,7 +277,8 @@ def makefig_cartoon_shape(figdir,aadir):
 	d1 = moldensity.copy()
 
 	####
-	moldensity = models._render_model(grid.origin,grid.dxyz,grid.nxyz,xyz,.3,8,.0)
+	moldensity = models.density_atoms(grid,xyz,sigma=.3,nsigma=8)
+	# moldensity = models._render_model(grid.origin,grid.dxyz,grid.nxyz,xyz,.3,8,.0)
 	moldensity = moldensity.sum(2)
 	moldensity/=moldensity.sum()
 	d2 = moldensity.copy()
@@ -276,7 +287,8 @@ def makefig_cartoon_shape(figdir,aadir):
 
 
 	####
-	moldensity = models._render_model(grid.origin,grid.dxyz,grid.nxyz,xyz,.2,8,.0)
+	moldensity = models.density_atoms(grid,xyz,sigma=.2,nsigma=8)
+	# moldensity = models._render_model(grid.origin,grid.dxyz,grid.nxyz,xyz,.2,8,.0)
 	for i in range(60):
 		# theta = np.deg2rad(np.random.normal()*17.5)
 		theta = np.deg2rad(i)
@@ -286,7 +298,8 @@ def makefig_cartoon_shape(figdir,aadir):
 		xyz2[bb,1] = xyz[bb,0]*np.sin(theta) + xyz[bb,1]*np.cos(theta)
 		# xyz2 += com[None,:]
 		# xyz2[:,:2] += np.random.normal(size=2)*.25
-		moldensity += models._render_model(grid.origin,grid.dxyz,grid.nxyz,xyz2,.3,8,.0)
+		moldensity += models.density_atoms(grid,xyz,sigma=.3,nsigma=8)
+		# moldensity += models._render_model(grid.origin,grid.dxyz,grid.nxyz,xyz2,.3,8,.0)
 		# plot_aa(atoms,xyz2,ax,aa,blist[0])
 
 	moldensity = moldensity.sum(2)
