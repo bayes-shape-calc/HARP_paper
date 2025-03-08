@@ -1,6 +1,8 @@
 # HARP Manuscript
 This contains scripts to set up all of the HARP calculations, *etc.* presented in the HARP manuscript. See the [HARP repository](https://github.com/bayes-shape-calc/HARP) and the [HARP website](https://bayes-shape-calc.github.io/HARP/) for more information about HARP code.
 
+![zenodo badge](https://zenodo.org/badge/DOI/10.5281/zenodo.10011336.svg)
+
 ## Run Calculations
 The `run_paper.py` script allows you to work through all the steps required to calculate $\{P\}$ and extract all requird data for all the cryoEM structures in the PDB. Use the following flags
 
@@ -22,7 +24,7 @@ Add one these arguments to execute that step (*e.g.*, `python run_paper.py downl
 * `'disthists`: Calculates the distance between the closest residue for each residue of a molecule. Code in `./harp_paper/calc_M1_distances.py`
 
 ### Archived Results
-The HDF5 file containing the HARP results is available [on Zenodo](https://zenodo.org/records/10011336) !()[https://zenodo.org/badge/DOI/10.5281/zenodo.10011336.svg].
+The HDF5 file containing the HARP results is available [on Zenodo](https://zenodo.org/records/10011336) 
 
 ## Make Figures
 The `figures/run_all_figures.py` script generates all figures. Once you have the `all_*.hdf5` files, then you can run `python figures/run_all_figures.py`. Note this should be run from the top-level directory, which is where the HDF5 files should reside. Rendered figures are stored in `/figures/rendered` as .pdf and .png format files. Generally you should run these from the top level directory as `python figures/(script_name_here).py`. Many of the EPres scripts require you to have `all_results.hdf5` and `all_radial.hdf5` present in the top directory.
@@ -114,6 +116,9 @@ The `harp` module will run a HARP calculation, but the make all of the figures, 
 pip install -r requirements.txt
 ```
 
+![NumPy](https://img.shields.io/badge/numpy-%23013243.svg?style=for-the-badge&logo=numpy&logoColor=white)
+![SciPy](https://img.shields.io/badge/SciPy-%230C55A5.svg?style=for-the-badge&logo=scipy&logoColor=%white)
+![Matplotlib](https://img.shields.io/badge/Matplotlib-%23ffffff.svg?style=for-the-badge&logo=Matplotlib&logoColor=black)
 
 ## Notes
 
